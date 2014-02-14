@@ -37,7 +37,7 @@ $ ./test.sh
 
 To run an individual test, run the Python file for the test directly, e.g.:
 ```
-$ python3 SignInAsGuest.py
+$ python3 testSignInAsGuest.py
 ```
 
 ## Configuring Selenium browsers
