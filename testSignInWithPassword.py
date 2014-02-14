@@ -5,7 +5,6 @@ from BaseTest import BaseTest, WithFirefox, WithChrome, username, password
 class SignInWithPassword(BaseTest):
 
     def test_can_access_as_visitor(self):
-        self.portal.goToStartPage()
 
         title = self.browser.title
         self.assertIn('BioVeL', title)

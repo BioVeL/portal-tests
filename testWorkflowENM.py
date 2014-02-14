@@ -14,7 +14,6 @@ class RunENMWorkflow(BaseTest):
 
     def setUp(self):
         BaseTest.setUp(self)
-        self.portal.goToStartPage()
         if username:
             self.portal.signInWithPassword(username, password)
         else:
