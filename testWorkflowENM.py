@@ -48,6 +48,7 @@ class RunENMWorkflow(BaseTest):
 
         link = self.browser.find_element_by_partial_link_text("Run workflow")
         link.click()
+        # XXX Firefox 27.0.1 on Windows 7 hangs here
 
         # Use the default inputs
 
