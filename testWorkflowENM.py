@@ -1,9 +1,12 @@
+import platform
+import time
+import unittest
+
 from selenium.common.exceptions import NoSuchElementException, TimeoutException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.support.ui import WebDriverWait
-import time
-import unittest
+
 from BaseTest import BaseTest, WithFirefox, WithChrome, username, password
 
 
@@ -84,6 +87,11 @@ class RunENMWorkflow(BaseTest):
         #         f.write(self.browser.page_source)
 
 
+
+# Firefox on Windows hangs on click of Run Workflow button using Selenium, but
+# not when running workflow manually
+# confirmed on (FF27.0.1, Win7)
+@unittest.skipIf(platform.system() == 'Windows', 'Selenium hangs with Firefox on Windows')
 class RunENMWorkflowFirefox(RunENMWorkflow, unittest.TestCase, WithFirefox):
     pass
 

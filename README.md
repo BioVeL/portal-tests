@@ -59,6 +59,13 @@ On Windows, run:
 C:\Python34\python.exe testSignInAsGuest.py
 ```
 
+## Known Problems
+
+Selenium InternetExplorer driver does not work with Internet Explorer 11 yet.
+
+Clicking the Run Workflow button in Firefox 27 on Windows 7 causes Firefox to hang.
+
+
 ## Configuring Selenium browsers
 
 Firefox is supported out of the box. Tests will be run using Firefox and any
