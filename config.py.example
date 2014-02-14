@@ -3,6 +3,6 @@ starturl = 'http://beta.biovel.eu/'
 # appropriate strings, e.g.
 # username = 'myname'
 # password = 'mysecret'
-# Ifusername is None, workflows will be run as Guest user
+# If username is None, workflows will be run as Guest user
 username = None
 password = None

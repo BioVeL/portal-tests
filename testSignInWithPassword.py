@@ -22,14 +22,15 @@ class SignInWithPassword(BaseTest):
         self.assertFalse(self.portal.isSignedIn())
 
 
-if username:
-    class SignInWithPasswordFirefox(SignInWithPassword, unittest.TestCase, WithFirefox):
+@unittest.skipUnless(username, 'No username login provided')
+class SignInWithPasswordFirefox(SignInWithPassword, unittest.TestCase, WithFirefox):
+    pass
+
+
+if WithChrome:
+    @unittest.skipUnless(username, 'No username login provided')
+    class SignInWithPasswordChrome(SignInWithPassword, unittest.TestCase, WithChrome):
         pass
-
-
-    if WithChrome:
-        class SignInWithPasswordChrome(SignInWithPassword, unittest.TestCase, WithChrome):
-            pass
 
 
 
