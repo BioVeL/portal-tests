@@ -24,6 +24,14 @@ $ sudo easy_install3 pip
 $ sudo pip3 install selenium
 ```
 
+### Windows 7
+
+> Python 3.4 should have simpler instructions, but it has not been generally released.
+
+Download and install the Python 3 MSI Installer from http://www.python.org/
+
+To install Selenium, read the instructions at http://selenium-python.readthedocs.org/en/latest/installation.html#detailed-instructions-for-windows-users
+
 ## Running tests
 
 Create a file `config.py` containing a URL for the front page of the portal,
