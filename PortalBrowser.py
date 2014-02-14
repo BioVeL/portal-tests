@@ -9,6 +9,21 @@ class PortalBrowser:
         self.browser = browser
         browser.get(url)
 
+    def goToHomePage(self):
+        header = self.browser.find_element_by_id('header')
+        link = header.find_element_by_partial_link_text("Workflows")
+        link.click()
+
+    def goToWorkflowsPage(self):
+        header = self.browser.find_element_by_id('header')
+        link = header.find_element_by_partial_link_text("Workflows")
+        link.click()
+
+    def goToRunsPage(self):
+        header = self.browser.find_element_by_id('header')
+        link = header.find_element_by_partial_link_text("Runs")
+        link.click()
+
     # Sign In
 
     def getSignOutLink(self):
@@ -48,6 +63,9 @@ class PortalBrowser:
         confirm = header.find_element_by_id('login_button')
         confirm.click()
 
+    def getFlashMessage(self):
+        return self.browser.find_element_by_id('notice_flash').text()
+        
     # Workflow Runs
 
     # All the wait... methods take the timeout and other parameters used in
