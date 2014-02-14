@@ -28,8 +28,7 @@ print('Checking availability of Chromium...', end='')
 try:
     chrome = webdriver.Chrome()
 except WebDriverException as exc:
-    print('no:')
-    print(exc)
+    print('no:', exc, sep='\n')
     WithChrome = None
 else:
     print('yes')

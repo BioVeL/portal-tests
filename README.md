@@ -2,8 +2,6 @@
 
 These tests check that a BioVeL Portal is running OK.
 
-To run, you need to install Python 3 and Selenium.
-
 ## Prerequisites
 
 The tests require Python 3 and Selenium.
@@ -32,9 +30,14 @@ Create a file `config.py` containing a URL for the front page of the portal,
 and a username and password for a registered user.  See `config.py.example`
 for information
 
-Run:
+To run all the tests:
 ```
 $ ./test.sh
+```
+
+To run an individual test, run the Python file for the test directly, e.g.:
+```
+$ python3 SignInAsGuest.py
 ```
 
 ## Configuring Selenium browsers

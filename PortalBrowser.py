@@ -15,9 +15,7 @@ class PortalBrowser:
     # Sign In
 
     def getSignOutLink(self):
-        return self.browser.find_element_by_partial_link_text(
-            "Log out",
-            )
+        return self.browser.find_element_by_partial_link_text("Log out")
 
     def signOut(self):
         try:
