@@ -75,7 +75,7 @@ See http://code.google.com/p/selenium/wiki/ChromeDriver
 
 See http://code.google.com/p/selenium/wiki/InternetExplorerDriver
 
-This is currently untested.
+This is currently untested.  The current drivers do not support IE11.
 
 ### Safari
 
