@@ -26,11 +26,12 @@ $ sudo pip3 install selenium
 
 ### Windows 7
 
-> Python 3.4 should have simpler instructions, but it has not been generally released.
+Download and install the Python 3.4 MSI Installer from http://www.python.org/
 
-Download and install the Python 3 MSI Installer from http://www.python.org/
-
-To install Selenium, read the instructions at http://selenium-python.readthedocs.org/en/latest/installation.html#detailed-instructions-for-windows-users
+Open a command window and run:
+```
+C:\Python34\python.exe -m pip install selenium
+```
 
 ## Running tests
 
@@ -43,9 +44,19 @@ To run all the tests:
 $ ./test.sh
 ```
 
+On Windows, run:
+```
+C:\Python34\python.exe -m unittest discover
+```
+
 To run an individual test, run the Python file for the test directly, e.g.:
 ```
 $ python3 testSignInAsGuest.py
+```
+
+On Windows, run:
+```
+C:\Python34\python.exe testSignInAsGuest.py
 ```
 
 ## Configuring Selenium browsers
