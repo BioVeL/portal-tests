@@ -37,19 +37,19 @@ else:
         def getBrowser(self):
             return webdriver.Chrome()
 
+def browserQuit(browser):
+    # short sleep, so anyone viewing can see final state of browser
+    time.sleep(2)
+    browser.quit()
+
 
 class BaseTest:
 
-    def browserQuit(self):
-        # short sleep, so anyone viewing can see final state of browser
-        time.sleep(2)
-        self.browser.quit()
-
     def setUp(self):
-        self.browser = self.getBrowser()
+        browser = self.getBrowser()
         # ensure browser quit is called, even if setUp fails
-        self.addCleanup(self.browserQuit)
-        self.portal = PortalBrowser.PortalBrowser(self.browser, starturl)
+        self.addCleanup(browserQuit, browser)
+        self.portal = PortalBrowser.PortalBrowser(browser, starturl)
 
     def tearDown(self):
         self.portal.signOut()

@@ -6,7 +6,7 @@ class SignInWithPassword(BaseTest):
 
     def test_can_access_as_visitor(self):
 
-        title = self.browser.title
+        title = self.portal.title
         self.assertIn('BioVeL', title)
         self.assertIn('Portal', title)
 

@@ -21,16 +21,16 @@ class RunENMWorkflow(BaseTest):
 
     def tearDown(self):
         # Cancel any active workflow run
-        self.browser.switch_to_default_content()
+        self.portal.switch_to_default_content()
         try:
-            link = self.browser.find_element_by_partial_link_text("Cancel")
+            link = self.portal.find_element_by_partial_link_text("Cancel")
         except NoSuchElementException:
             pass
         else:
             link.click()
             time.sleep(2)
-            self.browser.switch_to_alert().accept()
-            self.browser.switch_to_default_content()
+            self.portal.switch_to_alert().accept()
+            self.portal.switch_to_default_content()
             try:
                 self.portal.waitForRunStatusContains("Cancelled", 120)
             except TimeoutException:
@@ -39,22 +39,22 @@ class RunENMWorkflow(BaseTest):
         BaseTest.tearDown(self)
 
     def test_enm_workflow(self):
-        link = self.browser.find_element_by_partial_link_text("Ecological Niche Modelling")
+        link = self.portal.find_element_by_partial_link_text("Ecological Niche Modelling")
         link.click()
 
         # It is possible to run the workflow directly from the current page, but
         # here we click on the workflow-specific page
 
-        link = self.browser.find_element_by_link_text("Ecological niche modelling workflow")
+        link = self.portal.find_element_by_link_text("Ecological niche modelling workflow")
         link.click()
 
-        link = self.browser.find_element_by_partial_link_text("Run workflow")
+        link = self.portal.find_element_by_partial_link_text("Run workflow")
         link.click()
         # XXX Firefox 27.0.1 on Windows 7 hangs here
 
         # Use the default inputs
 
-        start = self.browser.find_element_by_xpath("//input[@value='Start Run']")
+        start = self.portal.find_element_by_xpath("//input[@value='Start Run']")
         start.click()
 
         self.assertIn('Run was successfully created', self.portal.getFlashMessage())
@@ -67,13 +67,13 @@ class RunENMWorkflow(BaseTest):
         with self.portal.waitForInteraction(300, 1):
             firstInteraction = time.time()
             print('Time to first interaction = {0:.1f}s'.format(firstInteraction - startWorkflow))
-            continueButton = WebDriverWait(self.browser, 60).until(
+            continueButton = WebDriverWait(self.portal, 60).until(
                 expected_conditions.presence_of_element_located((By.XPATH, '//button/span[text()="Continue"]')))
             continueButton.click()
 
         # Algorithm parameter values - use defaults
         with self.portal.waitForInteraction(300, 1):
-            continueButton = WebDriverWait(self.browser, 60).until(
+            continueButton = WebDriverWait(self.portal, 60).until(
                 expected_conditions.presence_of_element_located((By.XPATH, '//button/span[text()="Continue"]')))
             continueButton.click()
 
@@ -83,7 +83,7 @@ class RunENMWorkflow(BaseTest):
         # workflow run.
         # with self.portal.waitForInteraction(300, 1):
         #     with open('file.html', 'w') as f:
-        #         f.write(self.browser.page_source)
+        #         f.write(self.portal.page_source)
 
 
 

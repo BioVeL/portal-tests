@@ -1,5 +1,3 @@
-import time
-
 from selenium.common.exceptions import NoSuchElementException, WebDriverException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions
@@ -10,6 +8,10 @@ class PortalBrowser:
     def __init__(self, browser, url):
         self.browser = browser
         browser.get(url)
+
+    def __getattr__(self, name):
+        # If method does not exist, pass it on to the browser
+        return getattr(self.browser, name)
 
     # Always present portal components
 
