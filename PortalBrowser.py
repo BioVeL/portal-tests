@@ -33,6 +33,13 @@ class PortalBrowser:
     def getFlashMessage(self):
         return self.browser.find_element_by_id('notice_flash').text
 
+    def acceptAlert(self):
+        WebDriverWait(self.browser, 10).until(
+            expected_conditions.alert_is_present()
+            )
+        self.browser.switch_to_alert().accept()
+        self.browser.switch_to_default_content()
+
     # Sign In
 
     def getSignOutLink(self):

@@ -28,9 +28,7 @@ class RunENMWorkflow(BaseTest):
             pass
         else:
             link.click()
-            time.sleep(2)
-            self.portal.switch_to_alert().accept()
-            self.portal.switch_to_default_content()
+            self.portal.acceptAlert()
             try:
                 self.portal.waitForRunStatusContains("Cancelled", 120)
             except TimeoutException:

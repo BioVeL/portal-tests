@@ -1,0 +1,176 @@
+<workflow version="1" producedBy="Balcazapy" xmlns="http://taverna.sf.net/2008/xml/t2flow">
+  <dataflow role="top" id="d7e38362-e54f-421a-8d16-bbd687155552">
+    <name>Check_that_R_is_runn</name>
+    <inputPorts>
+    </inputPorts>
+    <outputPorts>
+      <port>
+        <name>out</name>
+        <annotations>
+        </annotations>
+      </port>
+    </outputPorts>
+    <processors>
+      <processor>
+        <name>Test</name>
+        <inputPorts>
+        </inputPorts>
+        <outputPorts>
+          <port>
+            <name>out</name>
+            <depth>0</depth>
+            <granularDepth>0</granularDepth>
+          </port>
+        </outputPorts>
+        <annotations>
+        </annotations>
+        <activities>
+          <activity>
+            <raven>
+              <group>net.sf.taverna.t2.activities</group>
+              <artifact>rshell-activity</artifact>
+              <version>1.4</version>
+            </raven>
+            <class>net.sf.taverna.t2.activities.rshell.RshellActivity</class>
+            <inputMap>
+            </inputMap>
+            <outputMap>
+              <map to="out" from="out" />
+            </outputMap>
+            <configBean encoding="xstream">
+              <net.sf.taverna.t2.activities.rshell.RshellActivityConfigurationBean xmlns="">
+                <inputs>
+                </inputs>
+                <outputs>
+                  <net.sf.taverna.t2.workflowmodel.processor.activity.config.ActivityOutputPortDefinitionBean>
+                    <name>out</name>
+                    <depth>0</depth>
+                    <mimeTypes />
+                    <granularDepth>0</granularDepth>
+                  </net.sf.taverna.t2.workflowmodel.processor.activity.config.ActivityOutputPortDefinitionBean>
+                </outputs>
+                <rVersion>false</rVersion>
+                <script>out &lt;- 28364
+</script>
+                <connectionSettings>
+                  <host>localhost</host>
+                  <port>6311</port>
+                  <keepSessionAlive>false</keepSessionAlive>
+                  <newRVersion>false</newRVersion>
+                </connectionSettings>
+                <inputSymanticTypes>
+                </inputSymanticTypes>
+                <outputSymanticTypes>
+                  <net.sf.taverna.t2.activities.rshell.RShellPortSymanticTypeBean>
+                    <name>out</name>
+                    <symanticType>INTEGER</symanticType>
+                  </net.sf.taverna.t2.activities.rshell.RShellPortSymanticTypeBean>
+                </outputSymanticTypes>
+              </net.sf.taverna.t2.activities.rshell.RshellActivityConfigurationBean>
+            </configBean>
+            <annotations />
+          </activity>
+        </activities>
+        <dispatchStack>
+          <dispatchLayer>
+            <raven>
+              <group>net.sf.taverna.t2.core</group>
+              <artifact>workflowmodel-impl</artifact>
+              <version>1.4</version>
+            </raven>
+            <class>net.sf.taverna.t2.workflowmodel.processor.dispatch.layers.Parallelize</class>
+            <configBean encoding="xstream">
+              <net.sf.taverna.t2.workflowmodel.processor.dispatch.layers.ParallelizeConfig xmlns="">
+                <maxJobs>1</maxJobs>
+              </net.sf.taverna.t2.workflowmodel.processor.dispatch.layers.ParallelizeConfig>
+            </configBean>
+          </dispatchLayer>
+          <dispatchLayer>
+            <raven>
+              <group>net.sf.taverna.t2.core</group>
+              <artifact>workflowmodel-impl</artifact>
+              <version>1.4</version>
+            </raven>
+            <class>net.sf.taverna.t2.workflowmodel.processor.dispatch.layers.ErrorBounce</class>
+            <configBean encoding="xstream">
+              <null xmlns="" />
+            </configBean>
+          </dispatchLayer>
+          <dispatchLayer>
+            <raven>
+              <group>net.sf.taverna.t2.core</group>
+              <artifact>workflowmodel-impl</artifact>
+              <version>1.4</version>
+            </raven>
+            <class>net.sf.taverna.t2.workflowmodel.processor.dispatch.layers.Failover</class>
+            <configBean encoding="xstream">
+              <null xmlns="" />
+            </configBean>
+          </dispatchLayer>
+          <dispatchLayer>
+            <raven>
+              <group>net.sf.taverna.t2.core</group>
+              <artifact>workflowmodel-impl</artifact>
+              <version>1.4</version>
+            </raven>
+            <class>net.sf.taverna.t2.workflowmodel.processor.dispatch.layers.Retry</class>
+            <configBean encoding="xstream">
+              <net.sf.taverna.t2.workflowmodel.processor.dispatch.layers.RetryConfig xmlns="">
+                <backoffFactor>1.0</backoffFactor>
+                <initialDelay>1000</initialDelay>
+                <maxDelay>5000</maxDelay>
+                <maxRetries>0</maxRetries>
+              </net.sf.taverna.t2.workflowmodel.processor.dispatch.layers.RetryConfig>
+            </configBean>
+          </dispatchLayer>
+          <dispatchLayer>
+            <raven>
+              <group>net.sf.taverna.t2.core</group>
+              <artifact>workflowmodel-impl</artifact>
+              <version>1.4</version>
+            </raven>
+            <class>net.sf.taverna.t2.workflowmodel.processor.dispatch.layers.Invoke</class>
+            <configBean encoding="xstream">
+              <null xmlns="" />
+            </configBean>
+          </dispatchLayer>
+        </dispatchStack>
+        <iterationStrategyStack>
+          <iteration>
+            <strategy>
+            </strategy>
+          </iteration>
+        </iterationStrategyStack>
+      </processor>
+    </processors>
+    <conditions>
+    </conditions>
+    <datalinks>
+      <datalink>
+        <source type="processor">
+          <processor>Test</processor>
+          <port>out</port>
+        </source>
+        <sink type="dataflow">
+          <port>out</port>
+        </sink>
+      </datalink>
+    </datalinks>
+    <annotations>
+      <annotation_chain encoding="xstream">
+        <net.sf.taverna.t2.annotation.AnnotationChainImpl xmlns="">
+          <annotationAssertions>
+            <net.sf.taverna.t2.annotation.AnnotationAssertionImpl>
+              <annotationBean class="net.sf.taverna.t2.annotation.annotationbeans.DescriptiveTitle">
+                <text>Check that R is running on localhost</text>
+              </annotationBean>
+              <date>2013-11-27 14:27:50.10 UTC</date>
+              <creators />
+              <curationEventList />
+            </net.sf.taverna.t2.annotation.AnnotationAssertionImpl>
+          </annotationAssertions>
+        </net.sf.taverna.t2.annotation.AnnotationChainImpl>
+      </annotation_chain>
+    </annotations>
+  </dataflow>
+</workflow>
