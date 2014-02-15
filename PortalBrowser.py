@@ -1,3 +1,5 @@
+import time
+
 from selenium.common.exceptions import NoSuchElementException, WebDriverException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions
@@ -9,25 +11,30 @@ class PortalBrowser:
         self.browser = browser
         browser.get(url)
 
-    def goToHomePage(self):
-        header = self.browser.find_element_by_id('header')
-        link = header.find_element_by_partial_link_text("Workflows")
+    # Always present portal components
+
+    def getPageHeader(self):
+        return self.browser.find_element_by_id('header')
+
+    def selectHomeTab(self):
+        link = self.getPageHeader().find_element_by_partial_link_text("Home")
         link.click()
 
-    def goToWorkflowsPage(self):
-        header = self.browser.find_element_by_id('header')
-        link = header.find_element_by_partial_link_text("Workflows")
+    def selectWorkflowsTab(self):
+        link = self.getPageHeader().find_element_by_partial_link_text("Workflows")
         link.click()
 
-    def goToRunsPage(self):
-        header = self.browser.find_element_by_id('header')
-        link = header.find_element_by_partial_link_text("Runs")
+    def selectRunsTab(self):
+        link = self.getPageHeader().find_element_by_partial_link_text("Runs")
         link.click()
+
+    def getFlashMessage(self):
+        return self.browser.find_element_by_id('notice_flash').text
 
     # Sign In
 
     def getSignOutLink(self):
-        return self.browser.find_element_by_partial_link_text("Log out")
+        return self.getPageHeader().find_element_by_partial_link_text("Log out")
 
     def signOut(self):
         try:
@@ -51,32 +58,24 @@ class PortalBrowser:
         link.click()
 
     def signInWithPassword(self, username, password):
-        header = self.browser.find_element_by_id('header')
-        link = header.find_element_by_link_text("Log in / Register")
+        header = self.getPageHeader()
+        link = header.find_element_by_partial_link_text("Log in")
         link.click()
-        import time
-        time.sleep(1)
+        confirm = WebDriverWait(header, 5).until(
+            expected_conditions.element_to_be_clickable(
+                (By.ID, 'login_button')
+                )
+            )
         userInput = header.find_element_by_id('login')
         userInput.send_keys(username)
         passInput = header.find_element_by_id('password')
         passInput.send_keys(password)
-        confirm = header.find_element_by_id('login_button')
         confirm.click()
-
-    def getFlashMessage(self):
-        return self.browser.find_element_by_id('notice_flash').text()
         
     # Workflow Runs
 
     # All the wait... methods take the timeout and other parameters used in
     # WebDriverWait, but excluding the initial browser driver parameter
-
-    def waitForRunFlashContains(self, message, *args, **kw):
-        WebDriverWait(self.browser, *args, **kw).until(
-            expected_conditions.text_to_be_present_in_element(
-                (By.ID, 'notice_flash'), message
-                )
-            )
 
     def waitForRunStatusContains(self, status, *args, **kw):
         WebDriverWait(self.browser, *args, **kw).until(

@@ -57,7 +57,7 @@ class RunENMWorkflow(BaseTest):
         start = self.browser.find_element_by_xpath("//input[@value='Start Run']")
         start.click()
 
-        self.portal.waitForRunFlashContains("Run was successfully created.", 60)
+        self.assertIn('Run was successfully created', self.portal.getFlashMessage())
 
         self.portal.waitForRunStatusContains("Running", 600, 1)
 
