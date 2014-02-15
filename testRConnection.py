@@ -1,4 +1,4 @@
-import os, time, unittest
+import os, unittest
 
 from selenium.common.exceptions import NoSuchElementException, TimeoutException
 # from selenium.webdriver.common.by import By
@@ -13,10 +13,7 @@ class RunRConnectionTest(BaseTest):
 
     def setUp(self):
         BaseTest.setUp(self)
-        if username:
-            self.portal.signInWithPassword(username, password)
-        else:
-            self.portal.signInAsGuest()
+        self.portal.signInWithPassword(username, password)
 
     def tearDown(self):
         # Cancel any active workflow run
@@ -92,10 +89,12 @@ class RunRConnectionTest(BaseTest):
 
         self.portal.acceptAlert()
 
+@unittest.skipUnless(username, 'No username login provided')
 class RunRConnectionTestFirefox(RunRConnectionTest, unittest.TestCase, WithFirefox):
     pass
 
 if WithChrome:
+    @unittest.skipUnless(username, 'No username login provided')
     class RunRConnectionTestChrome(RunRConnectionTest, unittest.TestCase, WithChrome):
         pass
 
