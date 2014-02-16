@@ -52,19 +52,29 @@ class BaseTest:
         self.portal = PortalBrowser.PortalBrowser(browser, starturl)
 
     def cancelRunAtURL(self, runURL):
+        # There may be an alert in the way, so acknowledge it.
+        try:
+            self.portal.acceptAlert(1)
+        except TimeoutException:
+            pass
+
+        # Then load the run page
         self.portal.get(runURL)
 
+        # Check if the run has been deleted already
         errorMessage = self.portal.getFlashError()
         if errorMessage and 'does not exist' in self.portal.getFlashError():
             return False
-        # There may be a modal interaction dialog in the way, so attempt to
-        # close it first.
+
+        # On a valid run page, there may be a modal interaction dialog in the 
+        # way, so attempt to close it first.
         try:
             link = self.portal.find_element_by_class_name('ui-dialog-titlebar-close')
         except NoSuchElementException:
             pass
         else:
             link.click()
+
         # Click on the Cancel button
         try:
             link = self.portal.find_element_by_partial_link_text("Cancel")

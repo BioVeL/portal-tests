@@ -2,10 +2,10 @@ import platform
 import time
 import unittest
 
-from selenium.common.exceptions import NoSuchElementException, TimeoutException
+from selenium.common.exceptions import TimeoutException
+from selenium.webdriver import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions
-from selenium.webdriver.support.ui import WebDriverWait
 
 from BaseTest import BaseTest, WithFirefox, WithChrome, username, password
 
@@ -53,23 +53,59 @@ class RunENMWorkflow(BaseTest):
         with self.portal.waitForInteraction(300, 1):
             firstInteraction = time.time()
             print('Time to first interaction = {0:.1f}s'.format(firstInteraction - startWorkflow))
-            continueButton = WebDriverWait(self.portal, 60).until(
-                expected_conditions.presence_of_element_located((By.XPATH, '//button/span[text()="Continue"]')))
-            continueButton.click()
+            continueButton = self.portal.wait(60).until(
+                expected_conditions.element_to_be_clickable((By.XPATH, '//button/span[text()="Continue"]')))
+            action_chains = ActionChains(self.portal.browser)
+            action_chains.move_to_element(continueButton).click().perform()
 
         # Algorithm parameter values - use defaults
         with self.portal.waitForInteraction(300, 1):
-            continueButton = WebDriverWait(self.portal, 60).until(
-                expected_conditions.presence_of_element_located((By.XPATH, '//button/span[text()="Continue"]')))
-            continueButton.click()
+            continueButton = self.portal.wait(60).until(
+                expected_conditions.element_to_be_clickable((By.XPATH, '//button/span[text()="Continue"]')))
+            action_chains = ActionChains(self.portal.browser)
+            action_chains.move_to_element(continueButton).click().perform()
 
+        # Select layers - use defaults
+        with self.portal.waitForInteraction(300, 1):
+            continueButton = self.portal.wait(60).until(
+                expected_conditions.element_to_be_clickable((By.XPATH, '//button/span[text()="Submit selected layers"]')))
+            action_chains = ActionChains(self.portal.browser)
+            action_chains.move_to_element(continueButton).click().perform()
 
-        # The third interaction is more complex, selecting checkboxes for layers.
-        # So, we let the test fall through to tearDown, where it will cancel the
-        # workflow run.
+        # Select or create input mask - create mask
+        with self.portal.waitForInteraction(300, 1):
+            continueButton = self.portal.wait(60).until(
+                expected_conditions.element_to_be_clickable((By.XPATH, '//button/span[text()="Create a new mask"]')))
+            action_chains = ActionChains(self.portal.browser)
+            action_chains.move_to_element(continueButton).click().perform()
+
+        # Code for BioSTIF interaction does not work consistently.
+        # Abandon run before we get there. Falling off the end of the test
+        # will cancel the running job.
+
+        # # BioSTIF - can't do much here, let's cancel
         # with self.portal.waitForInteraction(300, 1):
-        #     with open('file.html', 'w') as f:
-        #         f.write(self.portal.page_source)
+        #     # a dialog pops up with [msg_error_application_start_failed] - if it
+        #     # appears dismiss it else after 20 seconds, hit the abort button
+        #     try:
+        #         self.portal.acceptAlert(30)
+        #     except TimeoutException:
+        #         pass
+        #     # continueButton = self.portal.wait(30).until(
+        #     #     expected_conditions.element_to_be_clickable(
+        #     #         (By.ID, 'user_cancel')
+        #     #         )
+        #     #     )
+        #     time.sleep(5)
+        #     continueButton = self.portal.find_element_by_id('user_cancel')
+        #     continueButton.click()
+
+        # self.portal.waitForRunStatusContains("Finished", 300, 1)
+
+        # link = self.portal.find_element_by_partial_link_text("Delete")
+        # link.click()
+        # self.portal.acceptAlert()
+        # self.assertIn('Run was deleted', self.portal.getFlashNotice())
 
         self.removeRunAtURL(runURL)
 

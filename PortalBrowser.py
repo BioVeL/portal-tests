@@ -48,8 +48,8 @@ class PortalBrowser:
         except NoSuchElementException:
             return None
 
-    def acceptAlert(self):
-        WebDriverWait(self.browser, 10).until(
+    def acceptAlert(self, timeout=10):
+        WebDriverWait(self.browser, timeout).until(
             expected_conditions.alert_is_present()
             )
         self.browser.switch_to_alert().accept()
@@ -145,6 +145,9 @@ class PortalBrowser:
                 self.portal.waitForInteractionPageOpen(*self.args, **self.kw)
 
             def __exit__(self, type, value, tb):
-                self.portal.waitForInteractionPageClose(*self.args, **self.kw)
+                if type:
+                    raise
+                else:
+                    self.portal.waitForInteractionPageClose(*self.args, **self.kw)
 
         return WithInteractionPage(self, args, kw)
