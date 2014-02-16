@@ -108,3 +108,7 @@ and datasets to check that they are working. This attempts to use the public
 workflows already installed in the portal.
   * testWorkflowENM - test Ecological Niche Modelling workflow
 
+## Supported Portals
+
+Checked using Portal 0.8.0-10585 on 16/02/2014
+

@@ -18,23 +18,8 @@ class RunENMWorkflow(BaseTest):
             self.portal.signInWithPassword(username, password)
         else:
             self.portal.signInAsGuest()
+        self.addCleanup(self.portal.signOut)
 
-    def tearDown(self):
-        # Cancel any active workflow run
-        self.portal.switch_to_default_content()
-        try:
-            link = self.portal.find_element_by_partial_link_text("Cancel")
-        except NoSuchElementException:
-            pass
-        else:
-            link.click()
-            self.portal.acceptAlert()
-            try:
-                self.portal.waitForRunStatusContains("Cancelled", 120)
-            except TimeoutException:
-                pass
-
-        BaseTest.tearDown(self)
 
     def test_enm_workflow(self):
         link = self.portal.find_element_by_partial_link_text("Ecological Niche Modelling")
@@ -55,7 +40,10 @@ class RunENMWorkflow(BaseTest):
         start = self.portal.find_element_by_xpath("//input[@value='Start Run']")
         start.click()
 
-        self.assertIn('Run was successfully created', self.portal.getFlashMessage())
+        self.assertIn('Run was successfully created', self.portal.getFlashNotice())
+
+        runURL = self.portal.current_url
+        self.addCleanup(self.cancelRunAtURL, runURL)
 
         self.portal.waitForRunStatusContains("Running", 600, 1)
 
@@ -83,7 +71,7 @@ class RunENMWorkflow(BaseTest):
         #     with open('file.html', 'w') as f:
         #         f.write(self.portal.page_source)
 
-
+        self.removeRunAtURL(runURL)
 
 # Firefox on Windows hangs on click of Run Workflow button using Selenium, but
 # not when running workflow manually

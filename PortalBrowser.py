@@ -30,8 +30,23 @@ class PortalBrowser:
         link = self.getPageHeader().find_element_by_partial_link_text("Runs")
         link.click()
 
-    def getFlashMessage(self):
-        return self.browser.find_element_by_id('notice_flash').text
+    def getFlashResult(self):
+        try:
+            return (False, self.browser.find_element_by_id('error_flash').text)
+        except NoSuchElementException:
+            return (True, self.browser.find_element_by_id('notice_flash').text)
+
+    def getFlashNotice(self):
+        try:
+            return self.browser.find_element_by_id('notice_flash').text
+        except NoSuchElementException:
+            return None
+
+    def getFlashError(self):
+        try:
+            return self.browser.find_element_by_id('error_flash').text
+        except NoSuchElementException:
+            return None
 
     def acceptAlert(self):
         WebDriverWait(self.browser, 10).until(
@@ -85,6 +100,9 @@ class PortalBrowser:
 
     # All the wait... methods take the timeout and other parameters used in
     # WebDriverWait, but excluding the initial browser driver parameter
+
+    def wait(self, *args, **kw):
+        return WebDriverWait(self.browser, *args, **kw)
 
     def waitForRunStatusContains(self, status, *args, **kw):
         WebDriverWait(self.browser, *args, **kw).until(

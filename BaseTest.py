@@ -1,5 +1,5 @@
 from selenium import webdriver
-from selenium.common.exceptions import WebDriverException
+from selenium.common.exceptions import NoSuchElementException, TimeoutException, WebDriverException
 import time
 
 import PortalBrowser
@@ -10,7 +10,7 @@ import PortalBrowser
 # username = 'myname'
 # password = 'mysecret'
 try:
-    from config import *
+    from config import starturl, username, password
 except ImportError:
     starturl = 'http://beta.biovel.eu/'
     username = None
@@ -51,6 +51,60 @@ class BaseTest:
         self.addCleanup(browserQuit, browser)
         self.portal = PortalBrowser.PortalBrowser(browser, starturl)
 
-    def tearDown(self):
-        self.portal.signOut()
+    def cancelRunAtURL(self, runURL):
+        self.portal.get(runURL)
 
+        errorMessage = self.portal.getFlashError()
+        if errorMessage and 'does not exist' in self.portal.getFlashError():
+            return False
+        # There may be a modal interaction dialog in the way, so attempt to
+        # close it first.
+        try:
+            link = self.portal.find_element_by_class_name('ui-dialog-titlebar-close')
+        except NoSuchElementException:
+            pass
+        else:
+            link.click()
+        # Click on the Cancel button
+        try:
+            link = self.portal.find_element_by_partial_link_text("Cancel")
+        except NoSuchElementException:
+            pass
+        else:
+            link.click()
+            # Click OK on the "Are you sure?" alert
+            self.portal.acceptAlert()
+            # Workflow may finish just as workflow is cancelled, so check
+            # that first, and if it is not the case, wait for Cancelled.
+            try:
+                self.portal.waitForRunStatusContains("Finished", 5)
+            except TimeoutException:
+                try:
+                    self.portal.waitForRunStatusContains("Cancelled", 120)
+                except TimeoutException:
+                    pass
+        return True
+
+    def removeRunAtURL(self, runURL):
+        if self.cancelRunAtURL(runURL):
+            link = self.portal.find_element_by_partial_link_text("Delete")
+            link.click()
+            self.portal.acceptAlert()
+            self.assertIn('Run was deleted', self.portal.getFlashNotice())
+            self.portal.get(runURL)
+        self.assertIn('does not exist', self.portal.getFlashError())
+
+    def removeWorkflowAtURL(self, workflowURL):
+        self.portal.get(workflowURL)
+
+        link = self.portal.find_element_by_partial_link_text("Manage workflow")
+        link.click()
+
+        link = self.portal.find_element_by_partial_link_text("Delete workflow")
+        link.click()
+
+        self.portal.acceptAlert()
+
+        self.portal.get(workflowURL)
+
+        self.assertIn('does not exist', self.portal.getFlashError())
