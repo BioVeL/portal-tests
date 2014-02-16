@@ -105,8 +105,13 @@ and services are running.  These tests are uploaded and deleted during the test.
 
 3. BioVeL workflow tests - run each BioVeL workflow with particular parameters
 and datasets to check that they are working. This attempts to use the public
-workflows already installed in the portal.
-  * testWorkflowENM - test Ecological Niche Modelling workflow
+workflows already installed in the portal.  These workflows are called 
+`testBioVeL_<abbrev>_<strategy>.py`, where `<abbrev>` is the abbreviated
+workflow name and `<strategy>` describes hwo to deal with the inputs.  The
+`default` strategy uses the example inputs and generally clicks through the
+interactions. The `tutorial` strategy attempts to follow the instructions
+provided in the workflow's tutorial.
+  * testBioVeL_ENM_default - Ecological Niche Modelling workflow default inputs
 
 ## Supported Portals
 
