@@ -35,9 +35,12 @@ C:\Python34\python.exe -m pip install selenium
 
 ## Running tests
 
+*Note, the tests __must__ be run from the top-level directory (the directory
+containing this README file).*
+
 Create a file `config.py` containing a URL for the front page of the portal,
 and a username and password for a registered user.  See `config.py.example`
-for information
+for information.
 
 To run all the tests:
 ```
@@ -72,7 +75,7 @@ Firefox is supported out of the box. Tests will be run using Firefox and any
 additional browsers that are enabled. i.e. each test may be run multiple times,
 using different browsers.
 
-Other browsers typically requires some additional setup to work with Selenium.
+Other browsers typically require some additional setup to work with Selenium.
 
 ### Chromium / Google Chrome
 
@@ -107,7 +110,7 @@ and services are running.  These tests are uploaded and deleted during the test.
 and datasets to check that they are working. This attempts to use the public
 workflows already installed in the portal.  These workflows are called 
 `testBioVeL_<abbrev>_<strategy>.py`, where `<abbrev>` is the abbreviated
-workflow name and `<strategy>` describes hwo to deal with the inputs.  The
+workflow name and `<strategy>` describes how to deal with the inputs.  The
 `default` strategy uses the example inputs and generally clicks through the
 interactions. The `tutorial` strategy attempts to follow the instructions
 provided in the workflow's tutorial.
