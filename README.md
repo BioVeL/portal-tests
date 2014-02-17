@@ -115,6 +115,7 @@ workflow name and `<strategy>` describes how to deal with the inputs.  The
 interactions. The `tutorial` strategy attempts to follow the instructions
 provided in the workflow's tutorial.
   * testBioVeL_ENM_default - Ecological Niche Modelling workflow default inputs
+  * testBioVeL_MPM_tutorial - Matrix Population Modelling using tutorial files
 
 ## Supported Portals
 
