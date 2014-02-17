@@ -119,6 +119,7 @@ class PortalBrowser:
             )
         iframe = modal_interaction_dialog.find_element_by_tag_name('iframe')
         self.browser.switch_to_frame(iframe)
+        return iframe
 
     def waitForInteractionPageClose(self, *args, **kw):
         self.browser.switch_to_default_content()
@@ -142,7 +143,7 @@ class PortalBrowser:
                 self.kw = kw
 
             def __enter__(self):
-                self.portal.waitForInteractionPageOpen(*self.args, **self.kw)
+                return self.portal.waitForInteractionPageOpen(*self.args, **self.kw)
 
             def __exit__(self, type, value, tb):
                 if type:
