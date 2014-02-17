@@ -23,16 +23,16 @@ class RunENMWorkflow(BaseTest):
 
     def test_enm_workflow(self):
         link = self.portal.find_element_by_partial_link_text("Ecological Niche Modelling")
-        link.click()
+        self.portal.click(link)
 
         # It is possible to run the workflow directly from the current page, but
         # here we click on the workflow-specific page
 
         link = self.portal.find_element_by_link_text("Ecological niche modelling workflow")
-        link.click()
+        self.portal.click(link)
 
         link = self.portal.find_element_by_partial_link_text("Run workflow")
-        link.click()
+        self.portal.click(link)
         # XXX Firefox 27.0.1 on Windows 7 hangs here
 
         # Use the default inputs
@@ -55,29 +55,25 @@ class RunENMWorkflow(BaseTest):
             print('Time to first interaction = {0:.1f}s'.format(firstInteraction - startWorkflow))
             continueButton = self.portal.wait(60).until(
                 expected_conditions.element_to_be_clickable((By.XPATH, '//button/span[text()="Continue"]')))
-            action_chains = ActionChains(self.portal.browser)
-            action_chains.move_to_element(continueButton).click().perform()
+            self.portal.click(continueButton)
 
         # Algorithm parameter values - use defaults
         with self.portal.waitForInteraction(300, 1):
             continueButton = self.portal.wait(60).until(
                 expected_conditions.element_to_be_clickable((By.XPATH, '//button/span[text()="Continue"]')))
-            action_chains = ActionChains(self.portal.browser)
-            action_chains.move_to_element(continueButton).click().perform()
+            self.portal.click(continueButton)
 
         # Select layers - use defaults
         with self.portal.waitForInteraction(300, 1):
             continueButton = self.portal.wait(60).until(
                 expected_conditions.element_to_be_clickable((By.XPATH, '//button/span[text()="Submit selected layers"]')))
-            action_chains = ActionChains(self.portal.browser)
-            action_chains.move_to_element(continueButton).click().perform()
+            self.portal.click(continueButton)
 
         # Select or create input mask - create mask
         with self.portal.waitForInteraction(300, 1):
             continueButton = self.portal.wait(60).until(
                 expected_conditions.element_to_be_clickable((By.XPATH, '//button/span[text()="Create a new mask"]')))
-            action_chains = ActionChains(self.portal.browser)
-            action_chains.move_to_element(continueButton).click().perform()
+            self.portal.click(continueButton)
 
         # Code for BioSTIF interaction does not work consistently.
         # Abandon run before we get there.
@@ -104,13 +100,13 @@ class RunENMWorkflow(BaseTest):
         #             (By.ID, 'user_cancel')
         #             )
         #         )
-        #     action_chains = ActionChains(self.portal.browser)
+        #     self.portal.click(continueButton)
         #     action_chains.move_to_element(continueButton).click(continueButton).perform()
 
         # self.portal.waitForRunStatusContains("Finished", 300, 1)
 
         # link = self.portal.find_element_by_partial_link_text("Delete")
-        # link.click()
+        # self.portal.click(link)
         # self.portal.acceptAlert()
         # self.assertIn('Run was deleted', self.portal.getFlashNotice())
 

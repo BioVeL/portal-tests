@@ -1,4 +1,5 @@
 from selenium.common.exceptions import NoSuchElementException, WebDriverException
+from selenium.webdriver import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.support.ui import WebDriverWait
@@ -54,6 +55,15 @@ class PortalBrowser:
             )
         self.browser.switch_to_alert().accept()
         self.browser.switch_to_default_content()
+
+    def click(self, element):
+        # Although elements have a click method, it seems to play up, possibly
+        # when browser loses focus. Search for "selenium missing click" to get
+        # an idea of the problem. Most complaints are on IE, but Chrome seems
+        # susceptible as well. The incantation below, with the move operation
+        # before the click, seems to work more reliably.
+        action_chains = ActionChains(self.browser)
+        action_chains.move_to_element(element).click().perform()
 
     # Sign In
 
