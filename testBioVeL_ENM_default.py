@@ -83,7 +83,7 @@ class RunENMWorkflow(BaseTest):
 
         # BioSTIF - the remaining code cancels the BioSTIF interaction,
         # causing the workflow to finish. 
-        # with self.portal.waitForInteraction(300, 1) as iframe:
+        # with self.portal.waitForInteraction(300, 1) as interaction:
         #     # a dialog pops up with [msg_error_application_start_failed] - if it
         #     # appears dismiss it else after 20 seconds, hit the abort button
         #     try:
@@ -94,7 +94,7 @@ class RunENMWorkflow(BaseTest):
         #         self.portal.acceptAlert(30)
         #     except TimeoutException:
         #         pass
-        #     self.portal.switch_to_frame(iframe)
+        #     interaction.switchBack()
         #     continueButton = self.portal.wait(60).until(
         #         expected_conditions.element_to_be_clickable(
         #             (By.ID, 'user_cancel')

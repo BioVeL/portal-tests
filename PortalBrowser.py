@@ -121,29 +121,6 @@ class PortalBrowser:
                 )
             )
 
-    find_modal = (By.ID, 'modal-interaction-dialog')
-
-    def waitForInteractionPageOpen(self, *args, **kw):
-        modal_interaction_dialog = WebDriverWait(self.browser, *args, **kw).until(
-            expected_conditions.presence_of_element_located(self.find_modal)
-            )
-        iframe = modal_interaction_dialog.find_element_by_tag_name('iframe')
-        self.browser.switch_to_frame(iframe)
-        return iframe
-
-    def waitForInteractionPageClose(self, *args, **kw):
-        self.browser.switch_to_default_content()
-        WebDriverWait(self.browser, *args, **kw).until(
-            expected_conditions.invisibility_of_element_located(self.find_modal)
-            )
-        # Due to bug http://jira.biovel.eu/browse/SERVINF-380 the old modal is
-        # kept around. Here we delete it to ensure only one element has the id.
-        try:
-            self.browser.execute_script('document.getElementById("body").removeChild(document.getElementById("modal-interaction-dialog"))')
-        except WebDriverException:
-            # Hopefully, this indicates that SERVINF-380 has been fixed
-            pass
-
     def waitForInteraction(self, *args, **kw):
         class WithInteractionPage:
 
@@ -153,12 +130,39 @@ class PortalBrowser:
                 self.kw = kw
 
             def __enter__(self):
-                return self.portal.waitForInteractionPageOpen(*self.args, **self.kw)
+                modal_interaction_dialog = self.portal.wait(*self.args, **self.kw).until(
+                    expected_conditions.presence_of_element_located(
+                        (By.ID, 'modal-interaction-dialog')
+                        )
+                    )
+                self.iframe = modal_interaction_dialog.find_element_by_tag_name('iframe')
+                self.portal.switch_to_frame(self.iframe)
+                return self
 
             def __exit__(self, type, value, tb):
                 if type:
                     raise
                 else:
-                    self.portal.waitForInteractionPageClose(*self.args, **self.kw)
+                    self.portal.switch_to_default_content()
+                    SERVINF_380_fixed = True
+                    if SERVINF_380_fixed:
+                        # wait for interaction to be detached from DOM, to avoid
+                        # subsequent waits for interaction pages from finding
+                        # this interaction.
+                        WebDriverWait(self.portal, *args, **kw).until(
+                            expected_conditions.staleness_of(self.iframe)
+                            )
+                    else:
+                        # Older versions of the portal fail to detach the 
+                        # interaction page, leading to multiple interactions
+                        # in the DOM (although they are hidden). BioVeL 
+                        # developers, see  http://jira.biovel.eu/browse/SERVINF-380
+                        # These portals can be made to work by deleting the 
+                        # first instance of 'modal-interaction-dialog'
+                        self.portal.execute_script('document.getElementById("body").removeChild(document.getElementById("modal-interaction-dialog"))')
+
+            def switchBack(self):
+                # After a context switch (e.g. an alert), return to the interaction page
+                self.portal.switch_to_frame(self.iframe)
 
         return WithInteractionPage(self, args, kw)
