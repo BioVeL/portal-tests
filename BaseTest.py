@@ -20,7 +20,9 @@ except ImportError:
 class WithFirefox:
 
     def getBrowser(self):
-        return webdriver.Firefox()
+        driver = webdriver.Firefox()
+        driver.set_window_size(1024,640)
+        return driver
 
 
 # Test if Chromium browser (Google Chrome) is available
@@ -66,7 +68,7 @@ class BaseTest:
         if errorMessage and 'does not exist' in self.portal.getFlashError():
             return False
 
-        # On a valid run page, there may be a modal interaction dialog in the 
+        # On a valid run page, there may be a modal interaction dialog in the
         # way, so attempt to close it first.
         try:
             link = self.portal.find_element_by_class_name('ui-dialog-titlebar-close')
