@@ -1,6 +1,7 @@
-from selenium.common.exceptions import NoSuchElementException, WebDriverException
+from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver import ActionChains
 from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.support.ui import WebDriverWait
 
@@ -141,7 +142,7 @@ class PortalBrowser:
 
             def __exit__(self, type, value, tb):
                 if type:
-                    raise
+                    pass
                 else:
                     self.portal.switch_to_default_content()
                     SERVINF_380_fixed = True
@@ -166,3 +167,32 @@ class PortalBrowser:
                 self.portal.switch_to_frame(self.iframe)
 
         return WithInteractionPage(self, args, kw)
+
+    def workflowInputs(self):
+        class WithWorkflowInputs:
+            def __init__(self, portal):
+                self.portal = portal
+
+            def __enter__(self):
+                self.workflow_input = self.portal.find_element_by_class_name('workflow_input')
+                return self
+
+            def __exit__(self, type, value, tb):
+                pass
+
+            def setInputText(self, name, value):
+                textArea = self.workflow_input.find_element_by_xpath(
+                    './*[@data-input-name="{0}"]//textarea'.format(name)
+                    )
+                action_chains = ActionChains(self.portal.browser)
+                action_chains.move_to_element(textArea).click().send_keys(
+                    Keys.BACK_SPACE*len(textArea.text)+str(value)
+                    ).perform()
+
+            def setInputFile(self, name, path):
+                fileInput = self.workflow_input.find_element_by_xpath(
+                    './*[@data-input-name="{0}"]//input[@type="file"]'.format(name)
+                    )
+                fileInput.send_keys(path)
+
+        return WithWorkflowInputs(self)

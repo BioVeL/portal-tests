@@ -1,7 +1,9 @@
-import os, unittest
+import os, time, unittest
 
-from selenium.webdriver import ActionChains
+from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.support import expected_conditions
+
 from selenium.webdriver.support.select import Select
 
 from BaseTest import BaseTest, WithFirefox, WithChrome, username, password
@@ -45,17 +47,9 @@ class RunRConnectionTest(BaseTest):
         link = self.portal.find_element_by_partial_link_text("Run workflow")
         link.click()
 
-        inputs = self.portal.find_element_by_class_name('workflow_input')
-
-        iterations = inputs.find_element_by_xpath('./*[@data-input-name="iterations"]//textarea')
-        action_chains = ActionChains(self.portal.browser)
-        action_chains.move_to_element(iterations).click().send_keys(Keys.BACK_SPACE*len(iterations.text)+'1000').perform()
-
-        stageFile = inputs.find_element_by_xpath('./*[@data-input-name="stageMatrixFile"]//input[@type="file"]')
-        stageFile.send_keys(os.path.join(os.getcwd(), 'BioVeL_POP_MPM/MTers87_88.txt'))
-
-        import time
-        time.sleep(5)
+        with self.portal.workflowInputs() as inputs:
+            inputs.setInputText('iterations', 1000)
+            inputs.setInputFile('stageMatrixFile', os.path.join(os.getcwd(), 'BioVeL_POP_MPM/MTers87_88.txt'))
 
         startRun = self.portal.find_element_by_name('commit')
         startRun.click()
@@ -75,8 +69,12 @@ class RunRConnectionTest(BaseTest):
         }
 
         with self.portal.waitForInteraction(300, 1):
-            tbody = self.portal.find_element_by_id('content')
-            for tr in tbody.find_elements_by_xpath('./tr'):
+            content = self.portal.wait(30).until(
+                expected_conditions.presence_of_element_located(
+                    (By.ID, 'content')
+                    )
+                )
+            for tr in content.find_elements_by_xpath('./tr'):
                 stage = tr.find_element_by_xpath('./td[1]').text
                 self.assertIn(stage, abundances)
                 if stage in ('S', 'J'):
@@ -89,7 +87,11 @@ class RunRConnectionTest(BaseTest):
             submit.find_element_by_xpath('./input[@type="button"]').click()
 
         with self.portal.waitForInteraction(300, 1):
-            content = self.portal.find_element_by_id('content')
+            content = self.portal.wait(30).until(
+                expected_conditions.presence_of_element_located(
+                    (By.ID, 'content')
+                    )
+                )
             for div in content.find_elements_by_xpath('./div'):
                 stage = div.find_element_by_tag_name('label').text
                 self.assertIn(stage, abundances)
