@@ -66,10 +66,19 @@ class RunRConnectionTest(BaseTest):
 
         self.portal.waitForRunStatusContains("Running", 600, 1)
 
+        abundances = {
+        'S': 69,
+        'J': 111,
+        'V': 100, 
+        'G': 21,
+        'D': 43
+        }
+
         with self.portal.waitForInteraction(300, 1):
             tbody = self.portal.find_element_by_id('content')
             for tr in tbody.find_elements_by_xpath('./tr'):
                 stage = tr.find_element_by_xpath('./td[1]').text
+                self.assertIn(stage, abundances)
                 if stage in ('S', 'J'):
                     recruited = tr.find_element_by_xpath('./td[2]/input[@type="checkbox"]')
                     recruited.click()
@@ -79,13 +88,6 @@ class RunRConnectionTest(BaseTest):
             submit = self.portal.find_element_by_id('submit')
             submit.find_element_by_xpath('./input[@type="button"]').click()
 
-        abundances = {
-        'S': 69,
-        'J': 111,
-        'V': 100, 
-        'G': 21,
-        'D': 43
-        }
         with self.portal.waitForInteraction(300, 1):
             content = self.portal.find_element_by_id('content')
             for div in content.find_elements_by_xpath('./div'):
