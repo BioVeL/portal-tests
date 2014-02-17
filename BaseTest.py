@@ -9,13 +9,15 @@ import PortalBrowser
 # starturl = 'http://my.host/'
 # username = 'myname'
 # password = 'mysecret'
+starturl = 'http://beta.biovel.eu/'
+username = None
+password = None
+def pause(t):
+    pass
 try:
-    from config import starturl, username, password
+    from config import *
 except ImportError:
-    starturl = 'http://beta.biovel.eu/'
-    username = None
-    password = None
-
+    pass
 
 class WithFirefox:
 
@@ -120,3 +122,6 @@ class BaseTest:
         self.portal.get(workflowURL)
 
         self.assertIn('does not exist', self.portal.getFlashError())
+
+    def pause(self, t):
+        pause(t)

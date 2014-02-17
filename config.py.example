@@ -1,4 +1,5 @@
 starturl = 'http://beta.biovel.eu/'
+
 # To run tests as a registered user, set the username and password to the
 # appropriate strings, e.g.
 # username = 'myname'
@@ -6,3 +7,8 @@ starturl = 'http://beta.biovel.eu/'
 # If username is None, workflows will be run as Guest user
 username = None
 password = None
+
+# To run a workflow with pauses, uncomment this function:
+# def pause(t):
+#     import time
+#     time.sleep(t)

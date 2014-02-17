@@ -1,4 +1,4 @@
-import os, time, unittest
+import os, unittest
 
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
@@ -50,6 +50,7 @@ class RunRConnectionTest(BaseTest):
         with self.portal.workflowInputs() as inputs:
             inputs.setInputText('iterations', 1000)
             inputs.setInputFile('stageMatrixFile', os.path.join(os.getcwd(), 'BioVeL_POP_MPM/MTers87_88.txt'))
+            self.pause(1)
 
         startRun = self.portal.find_element_by_name('commit')
         startRun.click()
@@ -63,7 +64,7 @@ class RunRConnectionTest(BaseTest):
         abundances = {
         'S': 69,
         'J': 111,
-        'V': 100, 
+        'V': 100,
         'G': 21,
         'D': 43
         }
@@ -80,9 +81,12 @@ class RunRConnectionTest(BaseTest):
                 if stage in ('S', 'J'):
                     recruited = tr.find_element_by_xpath('./td[2]/input[@type="checkbox"]')
                     recruited.click()
+                    self.pause(0.5)
                 elif stage == 'G':
                     reproductive = tr.find_element_by_xpath('./td[3]/input[@type="checkbox"]')
                     reproductive.click()
+                    self.pause(0.5)
+            self.pause(1)
             submit = self.portal.find_element_by_id('submit')
             submit.find_element_by_xpath('./input[@type="button"]').click()
 
@@ -97,11 +101,12 @@ class RunRConnectionTest(BaseTest):
                 self.assertIn(stage, abundances)
                 textbox = div.find_element_by_tag_name('input')
                 textbox.send_keys(Keys.BACK_SPACE + str(abundances[stage]))
-            time.sleep(5)
+                self.pause(0.5)
+            self.pause(0.5)
             content.find_element_by_xpath('./input[@type="button"]').click()
 
         self.portal.waitForRunStatusContains("Finished", 300, 1)
-        time.sleep(5)
+        self.pause(10)
 
         link = self.portal.find_element_by_partial_link_text("Delete")
         link.click()
