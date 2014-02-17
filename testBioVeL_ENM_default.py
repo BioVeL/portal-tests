@@ -2,8 +2,7 @@ import platform
 import time
 import unittest
 
-from selenium.common.exceptions import TimeoutException
-from selenium.webdriver import ActionChains
+# from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions
 
@@ -82,7 +81,7 @@ class RunENMWorkflow(BaseTest):
 
 
         # BioSTIF - the remaining code cancels the BioSTIF interaction,
-        # causing the workflow to finish. 
+        # causing the workflow to finish.
         # with self.portal.waitForInteraction(300, 1) as interaction:
         #     # a dialog pops up with [msg_error_application_start_failed] - if it
         #     # appears dismiss it else after 20 seconds, hit the abort button
@@ -101,7 +100,6 @@ class RunENMWorkflow(BaseTest):
         #             )
         #         )
         #     self.portal.click(continueButton)
-        #     action_chains.move_to_element(continueButton).click(continueButton).perform()
 
         # self.portal.waitForRunStatusContains("Finished", 300, 1)
 

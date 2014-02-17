@@ -1,7 +1,6 @@
 import os, time, unittest
 
 from selenium.webdriver.common.by import By
-from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support import expected_conditions
 
 from selenium.webdriver.support.select import Select
