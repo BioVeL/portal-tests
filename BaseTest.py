@@ -1,6 +1,7 @@
+import sys, time
+
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException, TimeoutException, WebDriverException
-import time
 
 import PortalBrowser
 
@@ -12,8 +13,6 @@ import PortalBrowser
 starturl = 'http://beta.biovel.eu/'
 username = None
 password = None
-def pause(t):
-    pass
 try:
     from config import *
 except ImportError:
@@ -50,6 +49,9 @@ def browserQuit(browser):
 class BaseTest:
 
     def setUp(self):
+        module = sys.modules[self.__class__.__module__]
+        if 'pause' in dir(module) and module.pause:
+            self.addPause = True
         browser = self.getBrowser()
         # ensure browser quit is called, even if setUp fails
         self.addCleanup(browserQuit, browser)
@@ -123,5 +125,8 @@ class BaseTest:
 
         self.assertIn('does not exist', self.portal.getFlashError())
 
+    addPause = False
+
     def pause(self, t):
-        pause(t)
+        if self.addPause:
+            time.sleep(t)

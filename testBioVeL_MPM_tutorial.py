@@ -126,4 +126,13 @@ if WithChrome:
 
 
 if __name__ == '__main__':
+    import sys
+    i = 1
+    while i < len(sys.argv):
+        arg = sys.argv[i]
+        if arg == '--pause':
+            pause = True
+            del sys.argv[i]
+        else:
+            i += 1
     unittest.main()
