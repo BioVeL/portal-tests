@@ -1,4 +1,4 @@
-import os, unittest
+import os, platform, unittest
 
 from selenium.webdriver.support.select import Select
 
@@ -30,6 +30,7 @@ class RunRConnectionTest(BaseTest):
 
         nextButton = self.portal.find_element_by_id('workflow_submit_btn')
         nextButton.click()
+        # XXX Firefox 27.0.1 on Windows 7 hangs here
 
         self.assertIn('Workflow was successfully uploaded and saved', self.portal.getFlashNotice())
 
@@ -61,6 +62,10 @@ class RunRConnectionTest(BaseTest):
 
         self.removeWorkflowAtURL(workflowURL)
 
+# Firefox on Windows hangs on click of Workflow Submit button using Selenium, but
+# not when running workflow manually
+# confirmed on (FF27.0.1, Win7)
+@unittest.skipIf(platform.system() == 'Windows', 'Selenium hangs with Firefox on Windows')
 @unittest.skipUnless(username, 'No username login provided')
 class RunRConnectionTestFirefox(RunRConnectionTest, unittest.TestCase, WithFirefox):
     pass
