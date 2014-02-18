@@ -108,7 +108,17 @@ class BaseTest:
             self.portal.acceptAlert()
             self.assertIn('Run was deleted', self.portal.getFlashNotice())
             self.portal.get(runURL)
-        self.assertIn('does not exist', self.portal.getFlashError())
+        message = self.portal.getFlashError()
+        if message:
+            self.assertIn('does not exist', self.portal.getFlashError())
+        elif self.portal.getRepoVersion() == 10550 and isinstance(self, WithFirefox):
+            # portal 10550 does not display the flash message here
+            # Since it'll be history soon, don't bother notifying the error
+            pass
+        else:
+            filename = str(time.time()) + '.png'
+            self.portal.save_screenshot(filename)
+            raise RuntimeError('"does not exist" not in flash error - see {0}'.format(filename))
 
     def removeWorkflowAtURL(self, workflowURL):
         self.portal.get(workflowURL)

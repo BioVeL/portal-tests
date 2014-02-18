@@ -66,6 +66,13 @@ class PortalBrowser:
         action_chains = ActionChains(self.browser)
         action_chains.move_to_element(element).click().perform()
 
+    def getRepoVersion(self):
+        # Return the repo version id encoded in the portal version number
+        footer = self.browser.find_element_by_id('ft')
+        version = footer.find_element_by_xpath('./div/p').text
+        repover = int(version.split('-')[1])
+        return repover
+
     # Sign In
 
     def getSignOutLink(self):
@@ -145,23 +152,25 @@ class PortalBrowser:
                     pass
                 else:
                     self.portal.switch_to_default_content()
-                    footer = self.portal.find_element_by_id('ft')
-                    version = footer.find_element_by_xpath('./div/p').text
-                    repover = int(version.split('-')[1])
-                    if repover >= 10584:
+                    if self.portal.getRepoVersion() >= 10584:
                         # wait for interaction to be detached from DOM, to avoid
                         # subsequent waits for interaction pages from finding
                         # this interaction.
-                        WebDriverWait(self.portal, *args, **kw).until(
+                        self.portal.wait(*args, **kw).until(
                             expected_conditions.staleness_of(self.iframe)
                             )
                     else:
                         # Older versions of the portal fail to detach the
-                        # interaction page, leading to multiple interactions
-                        # in the DOM (although they are hidden). BioVeL
-                        # developers, see  http://jira.biovel.eu/browse/SERVINF-380
+                        # interaction page properly, leading to multiple
+                        # interactions in the DOM (although they are hidden).
                         # These portals can be made to work by deleting the
-                        # first instance of 'modal-interaction-dialog'
+                        # instances of id 'modal-interaction-dialog' that are
+                        # children of the body.
+                        self.portal.wait(60).until(
+                            expected_conditions.presence_of_element_located(
+                                (By.XPATH, '/html/body/div[@id="modal-interaction-dialog"]')
+                                )
+                            )
                         self.portal.execute_script('document.getElementById("body").removeChild(document.getElementById("modal-interaction-dialog"))')
 
             def switchBack(self):
