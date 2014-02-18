@@ -106,7 +106,7 @@ class PortalBrowser:
         passInput = header.find_element_by_id('password')
         passInput.send_keys(password)
         confirm.click()
-        
+
     # Workflow Runs
 
     # All the wait... methods take the timeout and other parameters used in
@@ -145,8 +145,10 @@ class PortalBrowser:
                     pass
                 else:
                     self.portal.switch_to_default_content()
-                    SERVINF_380_fixed = True
-                    if SERVINF_380_fixed:
+                    footer = self.portal.find_element_by_id('ft')
+                    version = footer.find_element_by_xpath('./div/p').text
+                    repover = int(version.split('-')[1])
+                    if repover >= 10584:
                         # wait for interaction to be detached from DOM, to avoid
                         # subsequent waits for interaction pages from finding
                         # this interaction.
@@ -154,11 +156,11 @@ class PortalBrowser:
                             expected_conditions.staleness_of(self.iframe)
                             )
                     else:
-                        # Older versions of the portal fail to detach the 
+                        # Older versions of the portal fail to detach the
                         # interaction page, leading to multiple interactions
-                        # in the DOM (although they are hidden). BioVeL 
+                        # in the DOM (although they are hidden). BioVeL
                         # developers, see  http://jira.biovel.eu/browse/SERVINF-380
-                        # These portals can be made to work by deleting the 
+                        # These portals can be made to work by deleting the
                         # first instance of 'modal-interaction-dialog'
                         self.portal.execute_script('document.getElementById("body").removeChild(document.getElementById("modal-interaction-dialog"))')
 
