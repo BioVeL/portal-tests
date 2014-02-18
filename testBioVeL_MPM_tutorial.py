@@ -1,4 +1,4 @@
-import os, platform, unittest
+import os, platform, time, unittest
 
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
@@ -36,7 +36,10 @@ class RunMPMWorkflow(BaseTest):
         nextButton.click()
         # XXX Firefox 27.0.1 on Windows 7 hangs here
 
+        time0 = time.time()
         self.assertIn('Workflow was successfully uploaded and saved', self.portal.getFlashNotice())
+        time1 = time.time()
+        print('Upload time: {0:.4}'.format(time1 - time0))
 
         saveButton = self.portal.find_element_by_name('commit')
         saveButton.click()
@@ -62,6 +65,8 @@ class RunMPMWorkflow(BaseTest):
 
         self.portal.waitForRunStatusContains("Running", 600, 1)
 
+        time0 = time.time()
+
         abundances = {
         'S': 69,
         'J': 111,
@@ -71,11 +76,15 @@ class RunMPMWorkflow(BaseTest):
         }
 
         with self.portal.waitForInteraction(300, 1):
+            time1 = time.time()
+            print('Time to first interaction: {0:.4}'.format(time1 - time0))
             content = self.portal.wait(30).until(
                 expected_conditions.presence_of_element_located(
                     (By.ID, 'content')
                     )
                 )
+            time2 = time.time()
+            print('Load interaction content: {0:.4}'.format(time2 - time1))
             for tr in content.find_elements_by_xpath('./tr'):
                 stage = tr.find_element_by_xpath('./td[1]').text
                 self.assertIn(stage, abundances)
@@ -90,6 +99,7 @@ class RunMPMWorkflow(BaseTest):
             self.pause(1)
             submit = self.portal.find_element_by_id('submit')
             submit.find_element_by_xpath('./input[@type="button"]').click()
+            time0 = time.time()
 
         with self.portal.waitForInteraction(300, 1):
             content = self.portal.wait(30).until(
@@ -97,6 +107,8 @@ class RunMPMWorkflow(BaseTest):
                     (By.ID, 'content')
                     )
                 )
+            time1 = time.time()
+            print('Time between interactions: {0:.4}'.format(time1 - time0))
             for div in content.find_elements_by_xpath('./div'):
                 stage = div.find_element_by_tag_name('label').text
                 self.assertIn(stage, abundances)
@@ -105,8 +117,11 @@ class RunMPMWorkflow(BaseTest):
                 self.pause(0.5)
             self.pause(0.5)
             content.find_element_by_xpath('./input[@type="button"]').click()
+            time0 = time.time()
 
         self.portal.waitForRunStatusContains("Finished", 300, 1)
+        time1 = time.time()
+        print('Analysis time: {0:.4}'.format(time1 - time0))
         self.pause(10)
 
         link = self.portal.find_element_by_partial_link_text("Delete")
