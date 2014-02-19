@@ -7,6 +7,11 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.support.ui import WebDriverWait
 
+
+class UnexpectedRunStatusException(Exception):
+    pass
+
+
 class PortalBrowser:
 
     def __init__(self, browser, url):
@@ -147,16 +152,35 @@ class PortalBrowser:
                     )
                 )
 
-    def waitForInteraction(self, *args, **kw):
+    def waitForInteraction(self, timeout, *args, **kw):
         class WithInteractionPage:
 
-            def __init__(self, portal, args, kw):
+            def __init__(self, portal, timeout, args, kw):
                 self.portal = portal
+                self.timeout = timeout
                 self.args = args
                 self.kw = kw
 
+            def waitForUserInputStatus(self, status):
+                if status == 'Waiting for user input':
+                    return True
+                elif status in ('Failed', 'Finished'):
+                    raise UnexpectedRunStatusException(status)
+
             def __enter__(self):
-                modal_interaction_dialog = self.portal.wait(*self.args, **self.kw).until(
+                # Rather than initially waiting for the appearance of the modal
+                # dialog, wait for run status to indicate that the portal is
+                # waiting for user input. This allows us to detect alternative
+                # paths, such as failure or unexpected finish.  Note, this first
+                # test can sometimes get triggered by the lingering status of a
+                # previous interaction, so sometimes this first test will return
+                # immediately and fallback on the wait for the modal dialog.
+                # This is why we add the remainder of the timeout to the second
+                # wait.
+                waitUntil = time.time() + self.timeout
+                self.portal.watchRunStatus(self.waitForUserInputStatus, self.timeout, *self.args, **self.kw)
+                timeout = waitUntil - time.time()
+                modal_interaction_dialog = self.portal.wait(timeout, *self.args, **self.kw).until(
                     expected_conditions.presence_of_element_located(
                         (By.ID, 'modal-interaction-dialog')
                         )
@@ -174,7 +198,7 @@ class PortalBrowser:
                         # wait for interaction to be detached from DOM, to avoid
                         # subsequent waits for interaction pages from finding
                         # this interaction.
-                        self.portal.wait(*args, **kw).until(
+                        self.portal.wait(self.timeout, *self.args, **self.kw).until(
                             expected_conditions.staleness_of(self.iframe)
                             )
                     else:
@@ -195,7 +219,7 @@ class PortalBrowser:
                 # After a context switch (e.g. an alert), return to the interaction page
                 self.portal.switch_to_frame(self.iframe)
 
-        return WithInteractionPage(self, args, kw)
+        return WithInteractionPage(self, timeout, args, kw)
 
     def workflowInputs(self):
         class WithWorkflowInputs:
