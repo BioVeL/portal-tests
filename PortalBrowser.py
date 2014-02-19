@@ -133,22 +133,19 @@ class PortalBrowser:
 
     def watchRunStatus(self, func, timeout, *args, **kw):
         watchUntil = time.time() + timeout
-        text = self.find_element_by_xpath("//div[@id='run-info']/div[1]/p[3]").text
-        assert text.startswith('Status:'), repr(text)
-        status = text.split(':')[1].strip()
-        result = func(status)
-        while result is None:
+        while True:
+            text = self.find_element_by_xpath("//div[@id='run-info']/div[1]/p[3]").text
+            assert text.startswith('Status:'), repr(text)
+            status = text.split(':', 1)[1].strip()
+            result = func(status)
+            if result is not None:
+                return result
             timeout = watchUntil - time.time()
             self.wait(timeout, *args, **kw).until_not(
                 expected_conditions.text_to_be_present_in_element(
                     (By.XPATH, "//div[@id='run-info']/div[1]/p[3]"), status
                     )
                 )
-            text = self.find_element_by_xpath("//div[@id='run-info']/div[1]/p[3]").text
-            assert text.startswith('Status:'), repr(text)
-            status = text.split(':', 1)[1].strip()
-            result = func(status)
-        return result
 
     def waitForInteraction(self, *args, **kw):
         class WithInteractionPage:
