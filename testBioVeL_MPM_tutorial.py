@@ -23,7 +23,7 @@ class RunMPMWorkflow(BaseTest):
                 'Queued', 'Starting run', 'Running', 'Failed'))
         else:
             self.assertIn(status, ('Connecting to Taverna Server', 'Queued',
-                'Running', 'Waiting for user input', 'Failed'))
+                'Starting run', 'Running', 'Waiting for user input', 'Failed'))
         if status == 'Failed':
             self.fail('Workflow run failed')
         elif status in ('Running', 'Waiting for user input'):
@@ -31,7 +31,7 @@ class RunMPMWorkflow(BaseTest):
 
     def waitForStatusFinished(self, status):
         self.assertIn(status, ('Running', 'Waiting for user input',
-            'Gathering run outputs and log', 'Finished', 'Failed'))
+            'Gathering run outputs and log', 'Running post-run tasks', 'Finished', 'Failed'))
         if status == 'Failed':
             self.fail('Workflow run failed')
         elif status == 'Finished':
@@ -99,14 +99,14 @@ class RunMPMWorkflow(BaseTest):
         with self.portal.waitForInteraction(300, 1):
             time1 = time.time()
             print('Time to first interaction: {0:.4}'.format(time1 - time0))
-            content = self.portal.wait(30).until(
+            confirm = self.portal.wait(60).until(
                 expected_conditions.presence_of_element_located(
-                    (By.ID, 'content')
+                    (By.XPATH, '//*[@id="submit"]/input[@value="Confirm"]')
                     )
                 )
             time2 = time.time()
             print('Load interaction content: {0:.4}'.format(time2 - time1))
-            for tr in content.find_elements_by_xpath('./tr'):
+            for tr in self.portal.find_elements_by_xpath('//*[id="content"]/tr'):
                 stage = tr.find_element_by_xpath('./td[1]').text
                 self.assertIn(stage, abundances)
                 if stage in ('S', 'J'):
@@ -118,26 +118,25 @@ class RunMPMWorkflow(BaseTest):
                     reproductive.click()
                     self.pause(0.5)
             self.pause(1)
-            submit = self.portal.find_element_by_id('submit')
-            submit.find_element_by_xpath('./input[@type="button"]').click()
+            confirm.click()
             time0 = time.time()
 
         with self.portal.waitForInteraction(300, 1):
-            content = self.portal.wait(30).until(
+            confirm = self.portal.wait(60).until(
                 expected_conditions.presence_of_element_located(
-                    (By.ID, 'content')
+                    (By.XPATH, '//*[@id="content"]/input[@value="Confirm"]')
                     )
                 )
             time1 = time.time()
             print('Time between interactions: {0:.4}'.format(time1 - time0))
-            for div in content.find_elements_by_xpath('./div'):
+            for div in self.portal.find_elements_by_xpath('//*[id="content"]/div'):
                 stage = div.find_element_by_tag_name('label').text
                 self.assertIn(stage, abundances)
                 textbox = div.find_element_by_tag_name('input')
                 textbox.send_keys(Keys.BACK_SPACE + str(abundances[stage]))
                 self.pause(0.5)
             self.pause(0.5)
-            content.find_element_by_xpath('./input[@type="button"]').click()
+            confirm.click()
             time0 = time.time()
 
         self.portal.watchRunStatus(self.waitForStatusFinished, 300)

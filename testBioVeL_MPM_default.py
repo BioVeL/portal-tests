@@ -22,7 +22,7 @@ class RunMPMWorkflow(BaseTest):
                 'Queued', 'Starting run', 'Running', 'Failed'))
         else:
             self.assertIn(status, ('Connecting to Taverna Server', 'Queued',
-                'Running', 'Waiting for user input', 'Failed'))
+                'Starting run', 'Running', 'Waiting for user input', 'Failed'))
         if status == 'Failed':
             self.fail('Workflow run failed')
         elif status in ('Running', 'Waiting for user input'):
@@ -30,7 +30,7 @@ class RunMPMWorkflow(BaseTest):
 
     def waitForStatusFinished(self, status):
         self.assertIn(status, ('Running', 'Waiting for user input',
-            'Gathering run outputs and log', 'Finished', 'Failed'))
+            'Gathering run outputs and log', 'Running post-run tasks', 'Finished', 'Failed'))
         if status == 'Failed':
             self.fail('Workflow run failed')
         elif status == 'Finished':
@@ -78,20 +78,20 @@ class RunMPMWorkflow(BaseTest):
         self.portal.watchRunStatus(self.waitForStatusRunning, 600)
 
         with self.portal.waitForInteraction(300, 1):
-            submit = self.portal.wait(30).until(
+            confirm = self.portal.wait(60).until(
                 expected_conditions.presence_of_element_located(
-                    (By.ID, 'submit')
+                    (By.XPATH, '//*[@id="submit"]/input[@value="Confirm"]')
                     )
                 )
-            submit.find_element_by_xpath('./input[@type="button"]').click()
+            confirm.click()
 
         with self.portal.waitForInteraction(300, 1):
-            content = self.portal.wait(30).until(
+            confirm = self.portal.wait(60).until(
                 expected_conditions.presence_of_element_located(
-                    (By.ID, 'content')
+                    (By.XPATH, '//*[@id="content"]/input[@value="Confirm"]')
                     )
                 )
-            content.find_element_by_xpath('./input[@type="button"]').click()
+            confirm.click()
 
         self.portal.watchRunStatus(self.waitForStatusFinished, 300)
 
