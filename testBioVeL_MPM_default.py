@@ -1,4 +1,4 @@
-import os, platform, time, unittest
+import os, platform, unittest
 
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions
@@ -14,6 +14,27 @@ class RunMPMWorkflow(BaseTest):
         BaseTest.setUp(self)
         self.portal.signInWithPassword(username, password)
         self.addCleanup(self.portal.signOut)
+
+    def waitForStatusRunning(self, status):
+        if self.portal.getRepoVersion() <= 10513:
+            self.assertIn(status, ('Connecting to Taverna Server',
+                'Initializing new workflow run', 'Uploading run inputs',
+                'Queued', 'Starting run', 'Running', 'Failed'))
+        else:
+            self.assertIn(status, ('Connecting to Taverna Server', 'Queued',
+                'Running', 'Waiting for user input', 'Failed'))
+        if status == 'Failed':
+            self.fail('Workflow run failed')
+        elif status in ('Running', 'Waiting for user input'):
+            return True
+
+    def waitForStatusFinished(self, status):
+        self.assertIn(status, ('Running', 'Waiting for user input',
+            'Gathering run outputs and log', 'Finished', 'Failed'))
+        if status == 'Failed':
+            self.fail('Workflow run failed')
+        elif status == 'Finished':
+            return True
 
     def test_workflow(self):
         self.portal.selectWorkflowsTab()
@@ -54,7 +75,7 @@ class RunMPMWorkflow(BaseTest):
 
         self.addCleanup(self.cancelRunAtURL, self.portal.current_url)
 
-        self.portal.waitForRunStatusContains("Running", 600, 1)
+        self.portal.watchRunStatus(self.waitForStatusRunning, 600)
 
         with self.portal.waitForInteraction(300, 1):
             submit = self.portal.wait(30).until(
@@ -72,8 +93,7 @@ class RunMPMWorkflow(BaseTest):
                 )
             content.find_element_by_xpath('./input[@type="button"]').click()
 
-        self.portal.waitForRunStatusContains("Finished", 300, 1)
-        time.sleep(5)
+        self.portal.watchRunStatus(self.waitForStatusFinished, 300)
 
         link = self.portal.find_element_by_partial_link_text("Delete")
         link.click()
