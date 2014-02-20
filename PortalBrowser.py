@@ -1,4 +1,4 @@
-import time
+import re, time
 
 from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver import ActionChains
@@ -77,7 +77,12 @@ class PortalBrowser:
         # Return the repo version id encoded in the portal version number
         footer = self.browser.find_element_by_id('ft')
         version = footer.find_element_by_xpath('./div/p').text
-        repover = int(version.split('-')[1])
+        match = re.search(r'Portal version: Alpha ([\d]+) -', version)
+        if match:
+            repover = int(match.group(1))
+        else:
+            assert re.search(r'Portal version: \d\.\d\.\d-([\d]+)', version), version
+            repover = int(version.split('-')[1])
         return repover
 
     # Sign In
