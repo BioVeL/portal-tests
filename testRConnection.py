@@ -13,21 +13,23 @@ class RunRConnectionTest(BaseTest):
         self.addCleanup(self.portal.signOut)
 
     def waitForStatusRunning(self, status):
-        if self.portal.getRepoVersion() <= 10513:
-            self.assertIn(status, ('Connecting to Taverna Server',
-                'Initializing new workflow run', 'Uploading run inputs',
-                'Queued', 'Starting run', 'Running', 'Failed'))
-        else:
-            self.assertIn(status, ('Connecting to Taverna Server', 'Queued',
-                'Starting run', 'Running', 'Waiting for user input', 'Failed'))
+        self.assertIn(status, (
+            'Connecting to Taverna Server', 'Initializing new workflow run',
+            'Uploading run inputs', 'Queued', 'Starting run', 'Running',
+            'Waiting for user input', 'Failed'
+            )
+        )
         if status == 'Failed':
             self.fail('Workflow run failed')
         elif status in ('Running', 'Waiting for user input'):
             return True
 
     def waitForStatusFinished(self, status):
-        self.assertIn(status, ('Running', 'Waiting for user input',
-            'Gathering run outputs and log', 'Running post-run tasks', 'Finished', 'Failed'))
+        self.assertIn(status, (
+            'Running', 'Waiting for user input', 'Gathering run outputs and log',
+            'Running post-run tasks', 'Finished', 'Failed'
+            )
+        )
         if status == 'Failed':
             self.fail('Workflow run failed')
         elif status == 'Finished':
