@@ -16,6 +16,16 @@ class RunMPMWorkflow(BaseTest):
         self.portal.signInWithPassword(username, password)
         self.addCleanup(self.portal.signOut)
 
+    def reportFailedRun(self):
+        advanced = self.portal.find_element_by_id('advanced')
+        # Click on title to make Advanced section visible. This is required
+        # in order to read the text attributes
+        advanced.find_element_by_xpath('.//*[@class="foldTitle"]').click()
+        outputs = advanced.find_elements_by_xpath('.//div[@class="foldContent"]/*')
+        messages = [(element.text.strip() or 'None') for element in outputs]
+        messages.insert(0, 'Workflow run failed:')
+        self.fail('\n---\n'.join(messages))
+
     def waitForStatusRunning(self, status):
         self.assertIn(status, (
             'Connecting to Taverna Server', 'Initializing new workflow run',
@@ -24,7 +34,7 @@ class RunMPMWorkflow(BaseTest):
             )
         )
         if status == 'Failed':
-            self.fail('Workflow run failed')
+            self.reportFailedRun()
         elif status in ('Running', 'Waiting for user input'):
             return True
 
@@ -35,7 +45,7 @@ class RunMPMWorkflow(BaseTest):
             )
         )
         if status == 'Failed':
-            self.fail('Workflow run failed')
+            self.reportFailedRun()
         elif status == 'Finished':
             return True
 
@@ -145,7 +155,11 @@ class RunMPMWorkflow(BaseTest):
         time1 = time.time()
         print('Analysis time: {0:.4}'.format(time1 - time0))
         self.pause(10)
-
+        runOutputs = self.portal.find_element_by_id('run-outputs')
+        for output in runOutputs.find_elements_by_xpath('.//div[@class="output"]'):
+            mimeType = output.find_element_by_xpath('.//span[@class="mime_type"]')
+            if mimeType.text == '(application/x-error)':
+                self.fail(output.find_element_by_xpath('.//pre').text)
         link = self.portal.find_element_by_partial_link_text("Delete")
         link.click()
         self.portal.acceptAlert()

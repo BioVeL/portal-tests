@@ -12,6 +12,16 @@ class RunRConnectionTest(BaseTest):
         self.portal.signInWithPassword(username, password)
         self.addCleanup(self.portal.signOut)
 
+    def reportFailedRun(self):
+        advanced = self.portal.find_element_by_id('advanced')
+        # Click on title to make Advanced section visible. This is required
+        # in order to read the text attributes
+        advanced.find_element_by_xpath('.//*[@class="foldTitle"]').click()
+        outputs = advanced.find_elements_by_xpath('.//div[@class="foldContent"]/*')
+        messages = [(element.text.strip() or 'None') for element in outputs]
+        messages.insert(0, 'Workflow run failed:')
+        self.fail('\n---\n'.join(messages))
+
     def waitForStatusRunning(self, status):
         self.assertIn(status, (
             'Connecting to Taverna Server', 'Initializing new workflow run',
@@ -20,7 +30,7 @@ class RunRConnectionTest(BaseTest):
             )
         )
         if status == 'Failed':
-            self.fail('Workflow run failed')
+            self.reportFailedRun()
         elif status in ('Running', 'Waiting for user input'):
             return True
 
@@ -31,10 +41,9 @@ class RunRConnectionTest(BaseTest):
             )
         )
         if status == 'Failed':
-            self.fail('Workflow run failed')
+            self.reportFailedRun()
         elif status == 'Finished':
             return True
-
     def test_workflow(self):
         self.portal.selectWorkflowsTab()
 
