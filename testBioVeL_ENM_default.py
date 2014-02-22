@@ -19,6 +19,38 @@ class RunENMWorkflow(BaseTest):
             self.portal.signInAsGuest()
         self.addCleanup(self.portal.signOut)
 
+    def reportFailedRun(self):
+        advanced = self.portal.find_element_by_id('advanced')
+        # Click on title to make Advanced section visible. This is required
+        # in order to read the text attributes
+        advanced.find_element_by_xpath('.//*[@class="foldTitle"]').click()
+        outputs = advanced.find_elements_by_xpath('.//div[@class="foldContent"]/*')
+        messages = [(element.text.strip() or 'None') for element in outputs]
+        messages.insert(0, 'Workflow run failed:')
+        self.fail('\n---\n'.join(messages))
+
+    def waitForStatusRunning(self, status):
+        self.assertIn(status, (
+            'Connecting to Taverna Server', 'Initializing new workflow run',
+            'Uploading run inputs', 'Queued', 'Starting run', 'Running',
+            'Waiting for user input', 'Failed'
+            )
+        )
+        if status == 'Failed':
+            self.reportFailedRun()
+        elif status in ('Running', 'Waiting for user input'):
+            return True
+
+    def waitForStatusFinished(self, status):
+        self.assertIn(status, (
+            'Running', 'Waiting for user input', 'Gathering run outputs and log',
+            'Running post-run tasks', 'Finished', 'Failed'
+            )
+        )
+        if status == 'Failed':
+            self.reportFailedRun()
+        elif status == 'Finished':
+            return True
 
     def test_enm_workflow(self):
         link = self.portal.find_element_by_partial_link_text("Ecological Niche Modelling")
@@ -44,7 +76,7 @@ class RunENMWorkflow(BaseTest):
         runURL = self.portal.current_url
         self.addCleanup(self.cancelRunAtURL, runURL)
 
-        self.portal.waitForRunStatusContains("Running", 600, 1)
+        self.portal.watchRunStatus(self.waitForStatusRunning, 600)
 
         startWorkflow = time.time()
 
@@ -101,7 +133,7 @@ class RunENMWorkflow(BaseTest):
         #         )
         #     self.portal.click(continueButton)
 
-        # self.portal.waitForRunStatusContains("Finished", 300, 1)
+        # self.portal.watchRunStatus(self.waitForStatusFinished, 300)
 
         # link = self.portal.find_element_by_partial_link_text("Delete")
         # self.portal.click(link)
