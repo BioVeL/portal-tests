@@ -119,7 +119,7 @@ class RunMPMWorkflow(BaseTest):
             time2 = time.time()
             print('Load interaction content: {0:.4}'.format(time2 - time1))
             rows = self.portal.find_elements_by_xpath('//*[@id="content"]/tr')
-            self.assertTrue(rows)
+            self.assertTrue(rows, 'no interaction stage rows found')
             for tr in rows:
                 stage = tr.find_element_by_xpath('./td[1]').text
                 self.assertIn(stage, abundances)
@@ -144,7 +144,7 @@ class RunMPMWorkflow(BaseTest):
             time1 = time.time()
             print('Time between interactions: {0:.4}'.format(time1 - time0))
             rows = self.portal.find_elements_by_xpath('//*[@id="content"]/div')
-            self.assertTrue(rows)
+            self.assertTrue(rows, 'no interaction abundance rows found')
             for div in rows:
                 stage = div.find_element_by_tag_name('label').text
                 self.assertIn(stage, abundances)
