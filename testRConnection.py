@@ -90,7 +90,7 @@ class RunRConnectionTest(BaseTest):
         link = self.portal.find_element_by_partial_link_text("Delete")
         link.click()
         self.portal.acceptAlert()
-        self.assertIn('Run was deleted', self.portal.getFlashNotice())
+        self.assertIn('Run was deleted', self.portal.getFlashNotice(), self.portal.getFlashError())
 
         self.removeWorkflowAtURL(workflowURL)
 
