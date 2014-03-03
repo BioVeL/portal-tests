@@ -57,6 +57,57 @@ class BaseTest:
         self.addCleanup(browserQuit, browser)
         self.portal = PortalBrowser.PortalBrowser(browser, starturl)
 
+
+    addPause = False
+
+    def pause(self, t):
+        if self.addPause:
+            time.sleep(t)
+
+class WorkflowTest(BaseTest):
+    '''WorkflowTest: class to run a specific workflow'''
+
+    def setUp(self):
+        BaseTest.setUp(self)
+        if username:
+            self.portal.signInWithPassword(username, password)
+        else:
+            self.portal.signInAsGuest()
+        self.addCleanup(self.portal.signOut)
+
+    def reportFailedRun(self):
+        advanced = self.portal.find_element_by_id('advanced')
+        # Click on title to make Advanced section visible. This is required
+        # in order to read the text attributes
+        advanced.find_element_by_xpath('.//*[@class="foldTitle"]').click()
+        outputs = advanced.find_elements_by_xpath('.//div[@class="foldContent"]/*')
+        messages = [(element.text.strip() or 'None') for element in outputs]
+        messages.insert(0, 'Workflow run failed:')
+        self.fail('\n---\n'.join(messages))
+
+    def waitForStatusRunning(self, status):
+        self.assertIn(status, (
+            'Connecting to Taverna Server', 'Initializing new workflow run',
+            'Uploading run inputs', 'Queued', 'Starting run', 'Running',
+            'Waiting for user input', 'Failed'
+            )
+        )
+        if status == 'Failed':
+            self.reportFailedRun()
+        elif status in ('Running', 'Waiting for user input'):
+            return True
+
+    def waitForStatusFinished(self, status):
+        self.assertIn(status, (
+            'Running', 'Waiting for user input', 'Gathering run outputs and log',
+            'Running post-run tasks', 'Finished', 'Failed'
+            )
+        )
+        if status == 'Failed':
+            self.reportFailedRun()
+        elif status == 'Finished':
+            return True
+
     def cancelRunAtURL(self, runURL):
         # There may be an alert in the way, so acknowledge it.
         try:
@@ -120,6 +171,69 @@ class BaseTest:
             self.portal.save_screenshot(filename)
             raise RuntimeError('"does not exist" not in flash error - see {0}'.format(filename))
 
+def wraplist(value):
+    if not isinstance(value, str):
+        value = '[' + ','.join([wraplist(v) for v in value]) + ']'
+    return value
+
+class Interactions:
+
+    def __init__(self, test, portal):
+        self.test = test
+        self.portal = portal
+        self.results = None
+
+    def __enter__(self):
+        self.portal.watchRunStatus(self.test.waitForStatusRunning, 600)
+
+        return self
+
+    def __exit__(self, type, value, tb):
+        if type is None:
+            self.portal.watchRunStatus(self.test.waitForStatusFinished, 600)
+
+            runOutputs = self.portal.find_element_by_id('run-outputs')
+            for output in runOutputs.find_elements_by_xpath('.//div[@class="output"]'):
+                mimeType = output.find_element_by_xpath('.//span[@class="mime_type"]')
+                if mimeType.text == '(application/x-error)':
+                    self.test.fail(output.find_element_by_xpath('.//pre').text)
+
+            self.results = {}
+
+
+
+class ExistingWorkflowTest(WorkflowTest):
+
+    def runWorkflow(self, name, textInputs=None, fileInputs=None):
+        link = self.portal.find_element_by_link_text(name)
+        self.portal.click(link)
+
+        link = self.portal.find_element_by_partial_link_text("Run workflow")
+        self.portal.click(link)
+
+        if textInputs:
+            for name, value in textInputs.items():
+                value = wraplist(value)
+                inputs.setInputText(name, value)
+                self.pause(1)
+        if fileInputs:
+            for name, value in fileInputs.items():
+                inputs.setInputFile(name, os.path.join(os.getcwd(), value))
+                self.pause(1)
+        self.pause(1)
+
+        start = self.portal.find_element_by_xpath("//input[@value='Start Run']")
+        start.click()
+
+        self.assertIn('Run was successfully created', self.portal.getFlashNotice())
+
+        runURL = self.portal.current_url
+        self.addCleanup(self.cancelRunAtURL, runURL)
+
+        return Interactions(self, self.portal)
+
+class UploadedWorkflowTest(WorkflowTest):
+
     def removeWorkflowAtURL(self, workflowURL):
         self.portal.get(workflowURL)
 
@@ -134,9 +248,3 @@ class BaseTest:
         self.portal.get(workflowURL)
 
         self.assertIn('does not exist', self.portal.getFlashError())
-
-    addPause = False
-
-    def pause(self, t):
-        if self.addPause:
-            time.sleep(t)
