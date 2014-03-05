@@ -53,6 +53,8 @@ class BaseTest:
         module = sys.modules[self.__class__.__module__]
         if 'pause' in dir(module) and module.pause:
             self.addPause = True
+        if 'screenshotBase' in dir(module):
+            self.screenshotBase = module.screenshotBase
         browser = self.getBrowser()
         # ensure browser quit is called, even if setUp fails
         self.addCleanup(browserQuit, browser)
@@ -64,6 +66,28 @@ class BaseTest:
     def pause(self, t):
         if self.addPause:
             time.sleep(t)
+
+    screenshotBase = None
+
+    def screenshot(self, filename, element=None):
+        if self.screenshotBase and isinstance(self, WithFirefox):
+            filename = os.path.join(self.screenshotBase, filename + '.png')
+            if element is None:
+                self.portal.save_screenshot(filename)
+            else:
+                tmpfile = os.path.join(self.screenshotBase, filename + '-full.png')
+                self.portal.save_screenshot(tmpfile)
+                content = self.portal.find_element_by_id('content')
+                location = content.location
+                size = content.size
+                from PIL import Image
+                im = Image.open(tmpfile)
+                left = location['x']
+                top = location['y']
+                right = location['x'] + size['width']
+                bottom = location['y'] + size['height']
+                im = im.crop((left, top, right, bottom))
+                im.save(filename)
 
 def wraplist(value):
     if isinstance(value, str):
