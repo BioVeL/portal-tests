@@ -1,4 +1,4 @@
-import re, time
+import re, time, urllib.parse, urllib.request
 
 from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver import ActionChains
@@ -72,6 +72,13 @@ class PortalBrowser:
         # before the click, seems to work more reliably.
         action_chains = ActionChains(self.browser)
         action_chains.move_to_element(element).click().perform()
+
+    def selectFile(self, fileInputElement, filename):
+        fileInputElement.send_keys(
+            urllib.request.url2pathname(
+                urllib.parse.urlparse('file:///' + filename).path
+                )
+            )
 
     def getRepoVersion(self):
         # Return the repo version id encoded in the portal version number
@@ -251,6 +258,6 @@ class PortalBrowser:
                 fileInput = self.workflow_input.find_element_by_xpath(
                     './*[@data-input-name="{0}"]//input[@type="file"]'.format(name)
                     )
-                fileInput.send_keys(path)
+                self.portal.selectFile(fileInput, path)
 
         return WithWorkflowInputs(self)
