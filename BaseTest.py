@@ -1,7 +1,8 @@
-import sys, time
+import os, sys, time
 
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException, TimeoutException, WebDriverException
+from selenium.webdriver.support.select import Select
 
 import PortalBrowser
 
@@ -63,6 +64,42 @@ class BaseTest:
     def pause(self, t):
         if self.addPause:
             time.sleep(t)
+
+def wraplist(value):
+    if isinstance(value, str):
+        pass
+    else:
+        try:
+            # list, tuple
+            value = '[' + ','.join([wraplist(v) for v in value]) + ']'
+        except TypeError:
+            # int, float
+            value = str(value)
+    return value
+
+class Interactions:
+
+    def __init__(self, test, portal):
+        self.test = test
+        self.portal = portal
+        self.results = None
+
+    def __enter__(self):
+        self.portal.watchRunStatus(self.test.waitForStatusRunning, 600)
+
+        return self
+
+    def __exit__(self, type, value, tb):
+        if type is None:
+            self.portal.watchRunStatus(self.test.waitForStatusFinished, 600)
+
+            runOutputs = self.portal.find_element_by_id('run-outputs')
+            for output in runOutputs.find_elements_by_xpath('.//div[@class="output"]'):
+                mimeType = output.find_element_by_xpath('.//span[@class="mime_type"]')
+                if mimeType.text == '(application/x-error)':
+                    self.test.fail(output.find_element_by_xpath('.//pre').text)
+
+            self.results = {}
 
 class WorkflowTest(BaseTest):
     '''WorkflowTest: class to run a specific workflow'''
@@ -171,40 +208,8 @@ class WorkflowTest(BaseTest):
             self.portal.save_screenshot(filename)
             raise RuntimeError('"does not exist" not in flash error - see {0}'.format(filename))
 
-def wraplist(value):
-    if not isinstance(value, str):
-        value = '[' + ','.join([wraplist(v) for v in value]) + ']'
-    return value
 
-class Interactions:
-
-    def __init__(self, test, portal):
-        self.test = test
-        self.portal = portal
-        self.results = None
-
-    def __enter__(self):
-        self.portal.watchRunStatus(self.test.waitForStatusRunning, 600)
-
-        return self
-
-    def __exit__(self, type, value, tb):
-        if type is None:
-            self.portal.watchRunStatus(self.test.waitForStatusFinished, 600)
-
-            runOutputs = self.portal.find_element_by_id('run-outputs')
-            for output in runOutputs.find_elements_by_xpath('.//div[@class="output"]'):
-                mimeType = output.find_element_by_xpath('.//span[@class="mime_type"]')
-                if mimeType.text == '(application/x-error)':
-                    self.test.fail(output.find_element_by_xpath('.//pre').text)
-
-            self.results = {}
-
-
-
-class ExistingWorkflowTest(WorkflowTest):
-
-    def runWorkflow(self, name, textInputs=None, fileInputs=None):
+    def runExistingWorkflow(self, name, textInputs=None, fileInputs=None):
         link = self.portal.find_element_by_link_text(name)
         self.portal.click(link)
 
@@ -232,19 +237,82 @@ class ExistingWorkflowTest(WorkflowTest):
 
         return Interactions(self, self.portal)
 
-class UploadedWorkflowTest(WorkflowTest):
+    def runUploadedWorkflow(self, filename, topic, textInputs=None, fileInputs=None):
+        self.portal.selectWorkflowsTab()
+
+        link = self.portal.find_element_by_partial_link_text('Upload a workflow')
+        self.pause(1)
+        link.click()
+
+        filename = self.portal.find_element_by_id('workflow_data')
+        self.pause(1)
+        filename.send_keys(os.path.join(os.getcwd(), 'BioVeL_POP_MPM/matrix_population_model_analysis_v10.t2flow'))
+
+        category = self.portal.find_element_by_id('workflow_category_id')
+        self.pause(1)
+        select = Select(category)
+        select.select_by_visible_text('Population Modelling')
+
+        keepPrivate = self.portal.find_element_by_id('sharing_scope_0')
+        self.pause(1)
+        keepPrivate.click()
+
+        nextButton = self.portal.find_element_by_id('workflow_submit_btn')
+        self.pause(1)
+        nextButton.click()
+
+        self.assertIn('Workflow was successfully uploaded and saved', self.portal.getFlashNotice())
+
+        saveButton = self.portal.find_element_by_name('commit')
+        self.pause(1)
+        saveButton.click()
+
+        self.assertIn('Workflow was successfully updated', self.portal.getFlashNotice())
+
+        workflowURL = self.portal.current_url
+        self.addCleanup(self.removeWorkflowAtURL, workflowURL)
+
+        link = self.portal.find_element_by_partial_link_text("Run workflow")
+        self.pause(1)
+        self.portal.click(link)
+
+        with self.portal.workflowInputs() as inputs:
+            if textInputs:
+                for name, value in textInputs.items():
+                    value = wraplist(value)
+                    inputs.setInputText(name, value)
+                    self.pause(1)
+            if fileInputs:
+                for name, value in fileInputs.items():
+                    inputs.setInputFile(name, os.path.join(os.getcwd(), value))
+                    self.pause(1)
+        self.pause(1)
+
+        start = self.portal.find_element_by_xpath("//input[@value='Start Run']")
+        start.click()
+
+        self.assertIn('Run was successfully created', self.portal.getFlashNotice())
+
+        runURL = self.portal.current_url
+        self.addCleanup(self.removeRunAtURL, runURL)
+
+        return Interactions(self, self.portal)
 
     def removeWorkflowAtURL(self, workflowURL):
         self.portal.get(workflowURL)
 
         link = self.portal.find_element_by_partial_link_text("Manage workflow")
+        self.pause(1)
         link.click()
 
         link = self.portal.find_element_by_partial_link_text("Delete workflow")
+        self.pause(1)
         link.click()
 
+        self.pause(1)
         self.portal.acceptAlert()
 
+        self.pause(1)
         self.portal.get(workflowURL)
 
         self.assertIn('does not exist', self.portal.getFlashError())
