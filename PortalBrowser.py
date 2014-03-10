@@ -148,12 +148,15 @@ class PortalBrowser:
                 )
             )
 
+    def getRunStatus(self):
+        text = self.find_element_by_xpath("//div[@id='run-info']/div[1]/p[3]").text
+        assert text.startswith('Status:'), repr(text)
+        return text.split(':', 1)[1].strip()
+
     def watchRunStatus(self, func, timeout, *args, **kw):
         watchUntil = time.time() + timeout
         while True:
-            text = self.find_element_by_xpath("//div[@id='run-info']/div[1]/p[3]").text
-            assert text.startswith('Status:'), repr(text)
-            status = text.split(':', 1)[1].strip()
+            status = self.getRunStatus()
             result = func(status)
             if result is not None:
                 return result
@@ -234,30 +237,30 @@ class PortalBrowser:
         return WithInteractionPage(self, timeout, args, kw)
 
     def workflowInputs(self):
-        class WithWorkflowInputs:
-            def __init__(self, portal):
-                self.portal = portal
+        try:
+            workflow_input = self.browser.find_element_by_class_name('workflow_input')
+        except NoSuchElementException:
+            return None
+        return RunInputs(self, workflow_input)
 
-            def __enter__(self):
-                self.workflow_input = self.portal.find_element_by_class_name('workflow_input')
-                return self
 
-            def __exit__(self, type, value, tb):
-                pass
+class RunInputs:
 
-            def setInputText(self, name, value):
-                textArea = self.workflow_input.find_element_by_xpath(
-                    './*[@data-input-name="{0}"]//textarea'.format(name)
-                    )
-                action_chains = ActionChains(self.portal.browser)
-                action_chains.move_to_element(textArea).click().send_keys(
-                    Keys.BACK_SPACE*len(textArea.text)+str(value)
-                    ).perform()
+    def __init__(self, portal, workflow_input):
+        self.portal = portal
+        self.workflow_input = workflow_input
 
-            def setInputFile(self, name, path):
-                fileInput = self.workflow_input.find_element_by_xpath(
-                    './*[@data-input-name="{0}"]//input[@type="file"]'.format(name)
-                    )
-                self.portal.selectFile(fileInput, path)
+    def setInputText(self, name, value):
+        textArea = self.workflow_input.find_element_by_xpath(
+            './*[@data-input-name="{0}"]//textarea'.format(name)
+            )
+        action_chains = ActionChains(self.portal.browser)
+        action_chains.move_to_element(textArea).click().send_keys(
+            Keys.BACK_SPACE*len(textArea.text)+str(value)
+            ).perform()
 
-        return WithWorkflowInputs(self)
+    def setInputFile(self, name, path):
+        fileInput = self.workflow_input.find_element_by_xpath(
+            './*[@data-input-name="{0}"]//input[@type="file"]'.format(name)
+            )
+        self.portal.selectFile(fileInput, path)

@@ -11,7 +11,7 @@ The tests require Python 3 and Selenium.
 ```
 $ sudo apt-get install python3 python3-pip
 
-$ sudo pip3 install selenium
+$ sudo pip3 install selenium requests
 ```
 
 ### Ubuntu 12.04
@@ -21,7 +21,7 @@ $ sudo apt-get install python3 python3-setuptools
 
 $ sudo easy_install3 pip
 
-$ sudo pip3 install selenium
+$ sudo pip3 install selenium requests
 ```
 
 ### Windows 7
@@ -30,7 +30,7 @@ Download and install the Python 3.4 MSI Installer from http://www.python.org/
 
 Open a command window and run:
 ```
-C:\Python34\python.exe -m pip install selenium
+C:\Python34\python.exe -m pip install selenium requests
 ```
 
 ## Running tests
@@ -114,8 +114,9 @@ workflow name and `<strategy>` describes how to deal with the inputs.  The
 `default` strategy uses the example inputs and generally clicks through the
 interactions. The `tutorial` strategy attempts to follow the instructions
 provided in the workflow's tutorial.
+  * tutorial_DRW_A.py
   * testBioVeL_ENM_default - Ecological Niche Modelling workflow default inputs
-  * testBioVeL_MPM_tutorial - Matrix Population Modelling using tutorial files
+  * testMPM_upload - Matrix Population Modelling
 
 ## Supported Portals
 

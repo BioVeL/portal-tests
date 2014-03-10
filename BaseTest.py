@@ -1,4 +1,6 @@
-import os, sys, time
+import os, sys, time, urllib.parse
+
+import requests
 
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException, TimeoutException, WebDriverException
@@ -101,29 +103,49 @@ def wraplist(value):
             value = str(value)
     return value
 
-class Interactions:
+class WorkflowResult:
+
+    def __init__(self, portal, mimeType, downloadLink):
+        self.portal = portal
+        self.mimeType = mimeType
+        self.downloadLink = downloadLink
+
+    def getMimeType(self):
+        return self.mimeType
+
+    def getValue(self):
+        cookies = {cookie['name']: cookie['value'] for cookie in self.portal.get_cookies()}
+        r = requests.get(self.downloadLink, cookies=cookies)
+        r.connection.close()
+        return r.text
+
+class WorkflowRun:
 
     def __init__(self, test, portal):
         self.test = test
         self.portal = portal
-        self.results = None
 
-    def __enter__(self):
-        self.portal.watchRunStatus(self.test.waitForStatusRunning, 600)
+    def waitForInteraction(self, *args, **kw):
+        return self.portal.waitForInteraction(*args, **kw)
 
-        return self
+    def waitForFinish(self, *args, **kw):
+        self.portal.watchRunStatus(self.test.waitForStatusFinished, *args, **kw)
 
-    def __exit__(self, type, value, tb):
-        if type is None:
-            self.portal.watchRunStatus(self.test.waitForStatusFinished, 600)
+        results = {}
 
-            runOutputs = self.portal.find_element_by_id('run-outputs')
-            for output in runOutputs.find_elements_by_xpath('.//div[@class="output"]'):
-                mimeType = output.find_element_by_xpath('.//span[@class="mime_type"]')
-                if mimeType.text == '(application/x-error)':
-                    self.test.fail(output.find_element_by_xpath('.//pre').text)
+        runOutputs = self.portal.find_element_by_id('run-outputs')
+        for output in runOutputs.find_elements_by_xpath('.//div[@class="output"]'):
+            name = output.find_element_by_xpath('./a[@id]').get_attribute('id')
+            mimeTypeSpan = output.find_element_by_xpath('.//span[@class="mime_type"]')
+            self.test.assertRegex(mimeTypeSpan.text, r'^\([^)]+\)$')
+            mimeType = mimeTypeSpan.text[1:-1] # remove outer parentheses
+            downloadLink = output.find_element_by_xpath('.//a[@href]').get_attribute('href')
+            fullUrl = urllib.parse.urljoin(self.portal.current_url, downloadLink)
+            self.test.assertNotIn(name, results)
+            results[name] = WorkflowResult(self.portal, mimeType, fullUrl)
 
-            self.results = {}
+        return results
+
 
 class WorkflowTest(BaseTest):
     '''WorkflowTest: class to run a specific workflow'''
@@ -240,15 +262,17 @@ class WorkflowTest(BaseTest):
         link = self.portal.find_element_by_partial_link_text("Run workflow")
         self.portal.click(link)
 
-        if textInputs:
-            for name, value in textInputs.items():
-                value = wraplist(value)
-                inputs.setInputText(name, value)
-                self.pause(1)
-        if fileInputs:
-            for name, value in fileInputs.items():
-                inputs.setInputFile(name, os.path.join(os.getcwd(), value))
-                self.pause(1)
+        inputs = self.portal.workflowInputs()
+        if inputs:
+            if textInputs:
+                for name, value in textInputs.items():
+                    value = wraplist(value)
+                    inputs.setInputText(name, value)
+                    self.pause(1)
+            if fileInputs:
+                for name, value in fileInputs.items():
+                    inputs.setInputFile(name, os.path.join(os.getcwd(), value))
+                    self.pause(1)
         self.pause(1)
 
         start = self.portal.find_element_by_xpath("//input[@value='Start Run']")
@@ -257,9 +281,11 @@ class WorkflowTest(BaseTest):
         self.assertIn('Run was successfully created', self.portal.getFlashNotice())
 
         runURL = self.portal.current_url
-        self.addCleanup(self.cancelRunAtURL, runURL)
+        self.addCleanup(self.removeRunAtURL, runURL)
 
-        return Interactions(self, self.portal)
+        self.portal.watchRunStatus(self.waitForStatusRunning, 600)
+
+        return WorkflowRun(self, self.portal)
 
     def runUploadedWorkflow(self, filename, topic, textInputs=None, fileInputs=None):
         self.portal.selectWorkflowsTab()
@@ -268,14 +294,14 @@ class WorkflowTest(BaseTest):
         self.pause(1)
         link.click()
 
-        filename = self.portal.find_element_by_id('workflow_data')
+        workflowFileInput = self.portal.find_element_by_id('workflow_data')
         self.pause(1)
-        filename.send_keys(os.path.join(os.getcwd(), 'BioVeL_POP_MPM/matrix_population_model_analysis_v10.t2flow'))
+        workflowFileInput.send_keys(os.path.join(os.getcwd(), filename))
 
         category = self.portal.find_element_by_id('workflow_category_id')
         self.pause(1)
         select = Select(category)
-        select.select_by_visible_text('Population Modelling')
+        select.select_by_visible_text(topic)
 
         keepPrivate = self.portal.find_element_by_id('sharing_scope_0')
         self.pause(1)
@@ -300,7 +326,8 @@ class WorkflowTest(BaseTest):
         self.pause(1)
         self.portal.click(link)
 
-        with self.portal.workflowInputs() as inputs:
+        inputs = self.portal.workflowInputs()
+        if inputs:
             if textInputs:
                 for name, value in textInputs.items():
                     value = wraplist(value)
@@ -320,7 +347,9 @@ class WorkflowTest(BaseTest):
         runURL = self.portal.current_url
         self.addCleanup(self.removeRunAtURL, runURL)
 
-        return Interactions(self, self.portal)
+        self.portal.watchRunStatus(self.waitForStatusRunning, 600)
+
+        return WorkflowRun(self, self.portal)
 
     def removeWorkflowAtURL(self, workflowURL):
         self.portal.get(workflowURL)
