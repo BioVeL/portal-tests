@@ -1,7 +1,7 @@
 import os.path, platform, shutil, tempfile, time, urllib.parse, urllib.request
 import unittest
 
-from selenium.common.exceptions import TimeoutException
+from selenium.common.exceptions import TimeoutException, UnexpectedAlertPresentException
 from selenium.webdriver import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions
@@ -83,11 +83,18 @@ class RunDRWWorkflow(WorkflowTest):
                     self.portal.wait(15).until(
                         expected_conditions.alert_is_present()
                         )
-                    self.pause(10)
+                    self.pause(5)
                     alert = self.portal.switch_to_alert()
-                    self.assertEqual(alert.text, 'Not sure what this one says')
+                    self.assertEqual(alert.text, 'BioSTIF cannot be started OpenLayers is not defined')
                     alert.accept()
-                    self.portal.switch_to_default_content()
+                    try:
+                        self.portal.switch_to_default_content()
+                    except UnexpectedAlertPresentException:
+                        # Sometimes, in Chrome, a third dialog appears - and we
+                        # cannot continue
+                        alert = self.portal.switch_to_alert()
+                        self.assertEqual(alert.text, 'BioSTiF could not start:  an error occurred: Error initializing BioSTIF: OpenLayers is not defined')
+                        self.fail('Error initializing BioSTIF: OpenLayers is not defined')
                     interaction.switchBack()
                 except TimeoutException:
                     pass
