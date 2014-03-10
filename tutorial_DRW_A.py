@@ -118,9 +118,13 @@ class RunDRWWorkflow(WorkflowTest):
             # Draw the polygon
             (finalX, finalY) = points.pop()
             for (x, y) in points:
-                ActionChains(self.portal.browser).move_to_element_with_offset(mapViewPortElement, int(x*mapWidth), int(y*mapHeight)).click().perform()
+                ActionChains(self.portal.browser).move_to_element_with_offset(
+                    mapViewPortElement, int(x*mapWidth), int(y*mapHeight)
+                    ).click().perform()
                 time.sleep(0.5)
-            ActionChains(self.portal.browser).move_to_element_with_offset(mapViewPortElement, int(finalX*mapWidth), int(finalY*mapHeight)).double_click().perform()
+            ActionChains(self.portal.browser).move_to_element_with_offset(
+                mapViewPortElement, int(finalX*mapWidth), int(finalY*mapHeight)
+                ).double_click().perform()
             self.screenshot('BioSTIFPolygonSelected', interaction.iframe)
             time.sleep(2)
 
