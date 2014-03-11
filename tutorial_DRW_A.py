@@ -62,42 +62,41 @@ class RunDRWWorkflow(WorkflowTest):
 
         # BioSTIF
         with run.waitForInteraction(300) as interaction:
-            # sometimes a dialog pops up with
-            # [msg_error_application_start_failed]
-            # Dismiss it.
+            # There are a series of alerts that may show up during BioSTIF
+            # initialisation. We can usually plough on after accepting, but
+            # sometimes it's a real failure and we need to abort
             try:
                 self.portal.wait(15).until(
                     expected_conditions.alert_is_present()
                     )
-            except TimeoutException:
-                pass
-            else:
                 self.pause(5)
                 alert = self.portal.switch_to_alert()
-                self.assertEqual(alert.text, '[msg_error_application_start_failed]')
-                alert.accept()
-                self.portal.switch_to_default_content()
-                interaction.switchBack()
-                # Sometimes a second dialog pops up
-                try:
+                text = alert.text
+                if text == '[msg_error_application_start_failed]':
+                    alert.accept()
+                    self.portal.switch_to_default_content()
+                    interaction.switchBack()
                     self.portal.wait(15).until(
                         expected_conditions.alert_is_present()
                         )
                     self.pause(5)
                     alert = self.portal.switch_to_alert()
-                    self.assertEqual(alert.text, 'BioSTIF cannot be started OpenLayers is not defined')
-                    alert.accept()
-                    try:
-                        self.portal.switch_to_default_content()
-                    except UnexpectedAlertPresentException:
-                        # Sometimes, in Chrome, a third dialog appears - and we
-                        # cannot continue
-                        alert = self.portal.switch_to_alert()
-                        self.assertEqual(alert.text, 'BioSTiF could not start:  an error occurred: Error initializing BioSTIF: OpenLayers is not defined')
-                        self.fail('Error initializing BioSTIF: OpenLayers is not defined')
-                    interaction.switchBack()
-                except TimeoutException:
-                    pass
+                    text = alert.text
+                self.assertEqual(text, 'BioSTIF cannot be started OpenLayers is not defined')
+                alert.accept()
+                try:
+                    self.portal.switch_to_default_content()
+                except UnexpectedAlertPresentException:
+                    # Sometimes, in Chrome, a third dialog appears immediately
+                    # after the above one - and we cannot continue
+                    alert = self.portal.switch_to_alert()
+                    self.assertEqual(alert.text, 'BioSTiF could not start:  an error occurred: Error initializing BioSTIF: OpenLayers is not defined')
+                    self.fail('Error initializing BioSTIF: OpenLayers is not defined')
+                interaction.switchBack()
+            except TimeoutException:
+                # Normal execution with no alerts (or only the first) should
+                # end up here
+                pass
 
             # Select draw polygon
             polygonButton = self.portal.wait(60).until(
