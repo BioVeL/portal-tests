@@ -66,7 +66,8 @@ C:\Python34\python.exe testSignInAsGuest.py
 
 Selenium InternetExplorer driver does not work with Internet Explorer 11 yet.
 
-Clicking the Run Workflow button in Firefox 27 on Windows 7 causes Firefox to hang.
+Selenium using Firefox 27 on Windows 7 causes Firefox to hang. The problem does
+not appear when using Firefox manually, so this seems to be a Selenium problem.
 
 
 ## Configuring Selenium browsers
@@ -108,17 +109,7 @@ and services are running.  These tests are uploaded and deleted during the test.
 
 3. BioVeL workflow tests - run each BioVeL workflow with particular parameters
 and datasets to check that they are working. This attempts to use the public
-workflows already installed in the portal.  These workflows are called 
-`testBioVeL_<abbrev>_<strategy>.py`, where `<abbrev>` is the abbreviated
-workflow name and `<strategy>` describes how to deal with the inputs.  The
-`default` strategy uses the example inputs and generally clicks through the
-interactions. The `tutorial` strategy attempts to follow the instructions
-provided in the workflow's tutorial.
+workflows already installed in the portal. 
   * tutorial_DRW_A.py
   * testBioVeL_ENM_default - Ecological Niche Modelling workflow default inputs
   * testMPM_upload - Matrix Population Modelling
-
-## Supported Portals
-
-Checked using Portal 0.8.0-10585 on 16/02/2014
-
