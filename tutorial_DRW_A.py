@@ -27,7 +27,7 @@ class RunDRWWorkflow(WorkflowTest):
         self.portal.get(saveURL)
 
     def test_drw_workflow(self):
-        self.screenshot('welcomeToPortal')
+        self.screenshot('screen-drw-09a')
         link = self.portal.find_element_by_partial_link_text("Taxonomic Refinement")
         self.pause(1)
         self.portal.click(link)
@@ -35,7 +35,7 @@ class RunDRWWorkflow(WorkflowTest):
         run = self.runExistingWorkflow('Data Refinement Workflow v14')
 
         # Choose Input file
-        with run.waitForInteraction(300):
+        with run.waitForInteraction(300) as interaction:
             continueButton = self.portal.wait(60).until(
                 expected_conditions.element_to_be_clickable((By.XPATH, '//button/div[text()="Submit"]')))
             title = self.portal.find_element_by_xpath('/html/body/table/tbody/tr[1]/td/div').text
@@ -43,20 +43,21 @@ class RunDRWWorkflow(WorkflowTest):
             fileInput = self.portal.find_element_by_xpath('/html/body/table/tbody/tr[2]/td/form/input')
             self.pause(1)
             fileInput.send_keys(self.inputFile)
-            self.screenshot('ChooseInputFile')
+            self.screenshot('screen-drw-11b', interaction.location, interaction.size)
             self.pause(1)
             self.portal.click(continueButton)
 
         # Choose Sub-workflow
-        with run.waitForInteraction(300):
+        with run.waitForInteraction(300) as interaction:
             continueButton = self.portal.wait(60).until(
                 expected_conditions.element_to_be_clickable((By.XPATH, '//button/div[text()="OK"]')))
             title = self.portal.find_element_by_xpath('/html/body/table/tbody/tr[1]/td/div').text
             self.assertEqual(title, 'Choose Sub-Workflow')
+            self.screenshot('screen-drw-12a', interaction.location, interaction.size)
             input = self.portal.find_element_by_xpath('//label[text()="Data Selection (BioSTIF)"]/../input')
             self.pause(1)
             input.click()
-            self.screenshot('ChooseBioSTIF')
+            self.screenshot('screen-drw-13b', interaction.location, interaction.size)
             self.pause(1)
             self.portal.click(continueButton)
 
@@ -119,7 +120,7 @@ class RunDRWWorkflow(WorkflowTest):
                 f.write(self.portal.page_source)
 
             # Define the points where we are going to click to make the polygon
-            points = [(0.3, 0.7), (0.3, 0.9), (0.7, 0.9), (0.7, 0.7)]
+            points = [(0.45, 0.5), (0.42, 0.7), (0.53, 0.9), (0.55, 0.5)]
 
             # Draw the polygon
             (prevX, prevY) = points.pop(0)
@@ -134,7 +135,7 @@ class RunDRWWorkflow(WorkflowTest):
                 prevY = y
             chain.double_click().perform()
             time.sleep(2)
-            self.screenshot('BioSTIFPolygonSelected', interaction.iframe)
+            self.screenshot('screen-drw-14a', interaction.location, interaction.size)
             time.sleep(2)
 
             # Filter elements inside polygon
@@ -145,8 +146,6 @@ class RunDRWWorkflow(WorkflowTest):
                 )
             self.pause(1)
             filterButton.click()
-
-            self.screenshot('BioSTIFPolygonFiltered', interaction.iframe)
 
             # Click ok to save changes and go back to subworkflow chooser
             bioStifSaveButton = self.portal.wait(10).until(
@@ -170,7 +169,7 @@ class RunDRWWorkflow(WorkflowTest):
         #     self.portal.click(continueButton)
 
         # Choose Sub-workflow
-        with run.waitForInteraction(300):
+        with run.waitForInteraction(300) as interaction:
             continueButton = self.portal.wait(60).until(
                 expected_conditions.element_to_be_clickable((By.XPATH, '//button/div[text()="OK"]')))
             title = self.portal.find_element_by_xpath('/html/body/table/tbody/tr[1]/td/div').text
@@ -178,7 +177,7 @@ class RunDRWWorkflow(WorkflowTest):
             input = self.portal.find_element_by_xpath('//label[text()="End Workflow"]/../input')
             self.pause(1)
             input.click()
-            self.screenshot('ChooseEndWorkflow')
+            self.screenshot('screen-drw-20b', interaction.location, interaction.size)
             self.pause(1)
             self.portal.click(continueButton)
 
@@ -187,6 +186,8 @@ class RunDRWWorkflow(WorkflowTest):
         csv_output = results['csv_output'].getValue()
         count = csv_output.count('\n')
         print(count)
+
+        self.screenshot('screen-drw-21a')
 
 # Firefox on Windows hangs on click of Run Workflow button using Selenium, but
 # not when running workflow manually

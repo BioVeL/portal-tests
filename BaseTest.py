@@ -23,6 +23,9 @@ except ImportError:
 
 class WithFirefox:
 
+    def screenshotTag(self):
+        return 'ffx'
+
     def getBrowser(self):
         driver = webdriver.Firefox()
         driver.set_window_size(1024,640)
@@ -40,6 +43,9 @@ else:
     print('yes')
     chrome.quit()
     class WithChrome:
+        def screenshotTag(self):
+            return 'chr'
+
         def getBrowser(self):
             return webdriver.Chrome()
 
@@ -71,25 +77,27 @@ class BaseTest:
 
     screenshotBase = None
 
-    def screenshot(self, filename, element=None):
-        if self.screenshotBase and isinstance(self, WithFirefox):
-            filename = os.path.join(self.screenshotBase, filename + '.png')
-            if element is None:
+    def screenshot(self, stubname, location=None, size=None):
+        if self.screenshotBase:
+            filename = os.path.join(self.screenshotBase, '%s-%s.png' % (stubname, self.screenshotTag()))
+            if location is None:
                 self.portal.save_screenshot(filename)
             else:
-                tmpfile = os.path.join(self.screenshotBase, filename + '-full.png')
+                tmpfile = os.path.join(self.screenshotBase, '%s-%s-full.png' % (stubname, self.screenshotTag()))
                 self.portal.save_screenshot(tmpfile)
-                content = self.portal.find_element_by_id('content')
-                location = content.location
-                size = content.size
                 from PIL import Image
-                im = Image.open(tmpfile)
-                left = location['x']
-                top = location['y']
-                right = location['x'] + size['width']
-                bottom = location['y'] + size['height']
-                im = im.crop((left, top, right, bottom))
-                im.save(filename)
+                # Pass an open file handle to PIL, to allow proper closure
+                # (at end of with block) as Python now warns about deleted
+                # unclosed files
+                with open(tmpfile, 'rb') as f:
+                    im = Image.open(f)
+                    # Chromium returns floats, but PIL requires ints
+                    left = int(location['x'])
+                    top = int(location['y'])
+                    right = left + int(size['width'])
+                    bottom = top + int(size['height'])
+                    im = im.crop((left, top, right, bottom))
+                    im.save(filename)
 
 def wraplist(value):
     if isinstance(value, str):
@@ -236,24 +244,27 @@ class WorkflowTest(BaseTest):
         return True
 
     def removeRunAtURL(self, runURL):
-        if self.cancelRunAtURL(runURL):
-            link = self.portal.find_element_by_partial_link_text("Delete")
-            link.click()
-            self.portal.acceptAlert()
-            self.assertIn('Run was deleted', self.portal.getFlashNotice())
-            self.portal.get(runURL)
-        message = self.portal.getFlashError()
-        if message:
-            self.assertIn('does not exist', self.portal.getFlashError())
-        elif self.portal.getRepoVersion() == 10550 and isinstance(self, WithFirefox):
-            # portal 10550 does not display the flash message here
-            # Since it'll be history soon, don't bother notifying the error
-            pass
+        if username:
+            if self.cancelRunAtURL(runURL):
+                link = self.portal.find_element_by_partial_link_text("Delete")
+                link.click()
+                self.portal.acceptAlert()
+                self.assertIn('Run was deleted', self.portal.getFlashNotice())
+                self.portal.get(runURL)
+            message = self.portal.getFlashError()
+            if message:
+                self.assertIn('does not exist', self.portal.getFlashError())
+            elif self.portal.getRepoVersion() == 10550 and isinstance(self, WithFirefox):
+                # portal 10550 does not display the flash message here
+                # Since it'll be history soon, don't bother notifying the error
+                pass
+            else:
+                filename = str(time.time()) + '.png'
+                self.portal.save_screenshot(filename)
+                raise RuntimeError('"does not exist" not in flash error - see {0}'.format(filename))
         else:
-            filename = str(time.time()) + '.png'
-            self.portal.save_screenshot(filename)
-            raise RuntimeError('"does not exist" not in flash error - see {0}'.format(filename))
-
+            # Guest user cannot delete workflow runs
+            self.cancelRunAtURL(runURL)
 
     def runExistingWorkflow(self, name, textInputs=None, fileInputs=None):
         link = self.portal.find_element_by_link_text(name)

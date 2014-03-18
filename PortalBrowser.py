@@ -201,6 +201,8 @@ class PortalBrowser:
                         )
                     )
                 self.iframe = modal_interaction_dialog.find_element_by_tag_name('iframe')
+                self.location = self.iframe.location
+                self.size = self.iframe.size
                 self.portal.switch_to_frame(self.iframe)
                 return self
 
