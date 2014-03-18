@@ -175,9 +175,8 @@ class RunDRWWorkflow(WorkflowTest):
                 prevX = x
                 prevY = y
             chain.double_click().perform()
-            time.sleep(2)
+            time.sleep(5)
             self.screenshot('screen-drw-14a', interaction.location, interaction.size)
-            time.sleep(2)
 
             # Filter elements inside polygon
             filterButton = self.portal.wait(30).until(
@@ -187,6 +186,27 @@ class RunDRWWorkflow(WorkflowTest):
                 )
             self.pause(1)
             filterButton.click()
+
+            # We cheat a little here. Removing the layers is tricky using
+            # Selenium because the 'no overlay' option is not visible on many
+            # displays. Scrolling a menu created using a div and CSS is hard,
+            # so we reverse the order of the screenshots to get what we need
+            time.sleep(5)
+            self.screenshot('screen-drw-15a', interaction.location, interaction.size)
+
+            dropdown = self.portal.find_element_by_xpath('//div[@id="mapContainerDiv"]//div[@title="Select layer for spatial filtering"]')
+            self.pause(1)
+            dropdown.click()
+
+            menuItem = dropdown.find_element_by_xpath('..//dt[text()="ETOPO1 Global Relief Model"]')
+            self.pause(1)
+            menuItem.click()
+
+            # For screenshot, we let the layer load, and then open the menu again
+            time.sleep(5)
+            dropdown.click()
+            time.sleep(1)
+            self.screenshot('screen-drw-14b', interaction.location, interaction.size)
 
             # Click ok to save changes and go back to subworkflow chooser
             bioStifSaveButton = self.portal.wait(10).until(
