@@ -49,11 +49,6 @@ else:
         def getBrowser(self):
             return webdriver.Chrome()
 
-def browserQuit(browser):
-    # short sleep, so anyone viewing can see final state of browser
-    time.sleep(2)
-    browser.quit()
-
 
 class BaseTest:
 
@@ -63,11 +58,22 @@ class BaseTest:
             self.addPause = True
         if 'screenshotBase' in dir(module):
             self.screenshotBase = module.screenshotBase
-        browser = self.getBrowser()
+        self.browser = self.getBrowser()
         # ensure browser quit is called, even if setUp fails
-        self.addCleanup(browserQuit, browser)
-        self.portal = PortalBrowser.PortalBrowser(browser, starturl)
+        self.addCleanup(self.browserQuit)
+        self.portal = PortalBrowser.PortalBrowser(self.browser, starturl)
 
+    def browserQuit(self):
+        if self.browser:
+            # short sleep, so anyone viewing can see final state of browser
+            self.pause(2)
+            self.browser.quit()
+
+    def restartBrowser(self):
+        self.browser.quit()
+        self.browser = None
+        self.browser = self.getBrowser()
+        self.portal = PortalBrowser.PortalBrowser(self.browser, starturl)
 
     addPause = False
 
@@ -164,7 +170,17 @@ class WorkflowTest(BaseTest):
             self.portal.signInWithPassword(username, password)
         else:
             self.portal.signInAsGuest()
-        self.addCleanup(self.portal.signOut)
+        self.addCleanup(self.portalSignOut)
+
+    def restartBrowser(self):
+        super().restartBrowser()
+        if username:
+            self.portal.signInWithPassword(username, password)
+        else:
+            self.portal.signInAsGuest()
+
+    def portalSignOut(self):
+        self.portal.signOut()
 
     def reportFailedRun(self):
         advanced = self.portal.find_element_by_id('advanced')
@@ -270,6 +286,8 @@ class WorkflowTest(BaseTest):
         link = self.portal.find_element_by_link_text(name)
         self.portal.click(link)
 
+        self.screenshot('%s-WorkflowDetails' % self.__class__.__name__)
+
         link = self.portal.find_element_by_partial_link_text("Run workflow")
         self.portal.click(link)
 
@@ -285,6 +303,8 @@ class WorkflowTest(BaseTest):
                     inputs.setInputFile(name, os.path.join(os.getcwd(), value))
                     self.pause(1)
         self.pause(1)
+
+        self.screenshot('%s-WorkflowInputs' % self.__class__.__name__)
 
         start = self.portal.find_element_by_xpath("//input[@value='Start Run']")
         start.click()

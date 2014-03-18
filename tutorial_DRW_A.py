@@ -6,7 +6,7 @@ from selenium.webdriver import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions
 
-from BaseTest import WorkflowTest, WithFirefox, WithChrome
+from BaseTest import WorkflowTest, WorkflowRun, WithFirefox, WithChrome
 
 
 class RunDRWWorkflow(WorkflowTest):
@@ -28,11 +28,18 @@ class RunDRWWorkflow(WorkflowTest):
 
     def test_drw_workflow(self):
         self.screenshot('screen-drw-09a')
+
         link = self.portal.find_element_by_partial_link_text("Taxonomic Refinement")
         self.pause(1)
         self.portal.click(link)
 
+        self.screenshot('screen-drw-10a')
+
         run = self.runExistingWorkflow('Data Refinement Workflow v14')
+
+        # Store the run URL here, to help with browser restart. If we do this
+        # later, we tend to get the interaction page URL instead
+        runUrl = self.portal.current_url
 
         # Choose Input file
         with run.waitForInteraction(300) as interaction:
@@ -47,13 +54,47 @@ class RunDRWWorkflow(WorkflowTest):
             self.pause(1)
             self.portal.click(continueButton)
 
+        class ExitInteraction(Exception):
+            pass
+        try:
+            # Choose Sub-workflow
+            with run.waitForInteraction(300) as interaction:
+                continueButton = self.portal.wait(60).until(
+                    expected_conditions.element_to_be_clickable((By.XPATH, '//button/div[text()="OK"]')))
+                title = self.portal.find_element_by_xpath('/html/body/table/tbody/tr[1]/td/div').text
+                self.assertEqual(title, 'Choose Sub-Workflow')
+                self.screenshot('screen-drw-12a', interaction.location, interaction.size)
+                self.pause(1)
+                # For normal exit of the with block, the code will wait until
+                # the interaction disappears. To exit without that, we raise
+                # an exception.
+                raise ExitInteraction()
+        except ExitInteraction:
+            pass
+
+        # Demonstration of quitting browser, and restarting
+        self.restartBrowser()
+        self.pause(1)
+        self.screenshot('screen-drw-12b')
+
+        self.portal.selectRunsTab()
+        self.pause(1)
+        self.screenshot('screen-drw-13a')
+
+        # Return to run - we don't actually select the run from the Runs tab, as
+        # we would have to work out which run was ours - we use our saved URL
+        self.portal.get(runUrl)
+
+        # Need to update run to use new portal
+        run = WorkflowRun(self, self.portal)
+        time.sleep(2)
+
         # Choose Sub-workflow
         with run.waitForInteraction(300) as interaction:
             continueButton = self.portal.wait(60).until(
                 expected_conditions.element_to_be_clickable((By.XPATH, '//button/div[text()="OK"]')))
             title = self.portal.find_element_by_xpath('/html/body/table/tbody/tr[1]/td/div').text
             self.assertEqual(title, 'Choose Sub-Workflow')
-            self.screenshot('screen-drw-12a', interaction.location, interaction.size)
             input = self.portal.find_element_by_xpath('//label[text()="Data Selection (BioSTIF)"]/../input')
             self.pause(1)
             input.click()
