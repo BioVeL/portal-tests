@@ -60,7 +60,7 @@ class RunMPMWorkflow(WorkflowTest):
 
         for result in results.values():
             if result.getMimeType() == 'application/x-error':
-                self.test.fail(result.getValue())
+                self.fail(result.getValue())
 
 class MPMDefaultInputs:
 

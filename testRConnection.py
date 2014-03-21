@@ -13,7 +13,7 @@ class RunRConnectionTest(WorkflowTest):
         out = results['out']
         value = out.getValue()
         if out.getMimeType() == 'application/x-error':
-            self.test.fail(value)
+            self.fail(value)
         else:
             self.assertEqual(value, '28364')
 
