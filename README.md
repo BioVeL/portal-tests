@@ -54,12 +54,12 @@ C:\Python34\python.exe -m unittest discover
 
 To run an individual test, run the Python file for the test directly, e.g.:
 ```
-$ python3 testSignInAsGuest.py
+$ python3 testRConnection.py
 ```
 
 On Windows, run:
 ```
-C:\Python34\python.exe testSignInAsGuest.py
+C:\Python34\python.exe testRConnection.py
 ```
 
 ## Known Problems
@@ -100,7 +100,6 @@ The tests can be divided into 3 types:
 
 1. General portal tests - simple tests that check that the portal itself is 
 working.
-  * testSignInAsGuest - sign in with no password
   * testSignInWithPassword - sign in with existing registered user
 
 2. Simple workflow tests - simple workflow runs to check that basic facilities
@@ -109,7 +108,7 @@ and services are running.  These tests are uploaded and deleted during the test.
 
 3. BioVeL workflow tests - run each BioVeL workflow with particular parameters
 and datasets to check that they are working. This attempts to use the public
-workflows already installed in the portal. 
-  * tutorial_DRW_A.py
-  * testBioVeL_ENM_default - Ecological Niche Modelling workflow default inputs
+workflows already installed in the portal (unless marked "upload").
+  * tutorial_DRW_A
+  * standard_ENM_default - Ecological Niche Modelling workflow default inputs
   * testMPM_upload - Matrix Population Modelling
