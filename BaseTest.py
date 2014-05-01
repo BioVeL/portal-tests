@@ -83,13 +83,15 @@ class BaseTest:
 
     screenshotBase = None
 
+    def screenshotName(self, stub):
+        return os.path.join(self.screenshotBase, '%s-%s.png' % (stub, self.screenshotTag()))
+
     def screenshot(self, stubname, location=None, size=None):
         if self.screenshotBase:
-            filename = os.path.join(self.screenshotBase, '%s-%s.png' % (stubname, self.screenshotTag()))
             if location is None:
-                self.portal.save_screenshot(filename)
+                self.portal.save_screenshot(self.screenshotName(stubname))
             else:
-                tmpfile = os.path.join(self.screenshotBase, '%s-%s-full.png' % (stubname, self.screenshotTag()))
+                tmpfile = self.screenshotName(stubname + '-full')
                 self.portal.save_screenshot(tmpfile)
                 from PIL import Image
                 # Pass an open file handle to PIL, to allow proper closure
@@ -102,8 +104,10 @@ class BaseTest:
                     top = int(location['y'])
                     right = left + int(size['width'])
                     bottom = top + int(size['height'])
+                    self.assertGreater(right, left)
+                    self.assertGreater(bottom, top)
                     im = im.crop((left, top, right, bottom))
-                    im.save(filename)
+                    im.save(self.screenshotName(stubname + '-crop'))
 
 def wraplist(value):
     if isinstance(value, str):
@@ -286,7 +290,7 @@ class WorkflowTest(BaseTest):
         link = self.portal.find_element_by_link_text(name)
         self.portal.click(link)
 
-        self.screenshot('%s-WorkflowDetails' % self.__class__.__name__)
+        self.screenshot('WorkflowDetails')
 
         link = self.portal.find_element_by_partial_link_text("Run workflow")
         self.portal.click(link)
@@ -304,7 +308,7 @@ class WorkflowTest(BaseTest):
                     self.pause(1)
         self.pause(1)
 
-        self.screenshot('%s-WorkflowInputs' % self.__class__.__name__)
+        self.screenshot('WorkflowInputs')
 
         start = self.portal.find_element_by_xpath("//input[@value='Start Run']")
         start.click()

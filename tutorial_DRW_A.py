@@ -26,7 +26,8 @@ class RunDRWWorkflow(WorkflowTest):
         urllib.request.urlretrieve(fullUrl, self.inputFile)
         self.portal.get(saveURL)
 
-    def test_drw_workflow(self):
+    @unittest.skip('BioSTIF')
+    def test_drw_3_1_5(self):
         self.screenshot('screen-drw-09a')
 
         link = self.portal.find_element_by_partial_link_text("Taxonomic Refinement")
@@ -36,6 +37,9 @@ class RunDRWWorkflow(WorkflowTest):
         self.screenshot('screen-drw-10a')
 
         run = self.runExistingWorkflow('Data Refinement Workflow v14')
+        if self.screenshotBase:
+            os.rename(self.screenshotName('WorkflowDetails'), self.screenshotName('screen-drw-10b'))
+            os.rename(self.screenshotName('WorkflowInputs'), self.screenshotName('screen-drw-11a'))
 
         # Store the run URL here, to help with browser restart. If we do this
         # later, we tend to get the interaction page URL instead
@@ -216,18 +220,136 @@ class RunDRWWorkflow(WorkflowTest):
                 )
             bioStifSaveButton.click()
 
-        # # Choose Sub-workflow
-        # with run.waitForInteraction(300, 1):
-        #     continueButton = self.portal.wait(60).until(
-        #         expected_conditions.element_to_be_clickable((By.XPATH, '//button/div[text()="OK"]')))
-        #     title = self.portal.find_element_by_xpath('/html/body/table/tbody/tr[1]/td/div').text
-        #     self.assertEqual(title, 'Choose Sub-Workflow')
-        #     input = self.portal.find_element_by_xpath('//label[text()="Data Quality (Google Refine)"]/../input')
-        #     self.pause(1)
-        #     input.click()
-        #     self.screenshot('ChooseRefine')
-        #     self.pause(1)
-        #     self.portal.click(continueButton)
+        # Choose Sub-workflow
+        with run.waitForInteraction(300):
+            continueButton = self.portal.wait(60).until(
+                expected_conditions.element_to_be_clickable((By.XPATH, '//button/div[text()="OK"]')))
+            title = self.portal.find_element_by_xpath('/html/body/table/tbody/tr[1]/td/div').text
+            self.assertEqual(title, 'Choose Sub-Workflow')
+            input = self.portal.find_element_by_xpath('//label[text()="End Workflow"]/../input')
+            self.pause(1)
+            input.click()
+            self.pause(1)
+            self.portal.click(continueButton)
+
+        results = run.waitForFinish(120)
+
+        csv_output = results['csv_output'].getValue()
+        count = csv_output.count('\n')
+        print(count)
+
+    def test_drw_3_1_6(self):
+        link = self.portal.find_element_by_partial_link_text("Taxonomic Refinement")
+        self.pause(1)
+        self.portal.click(link)
+
+        run = self.runExistingWorkflow('Data Refinement Workflow v14')
+        if self.screenshotBase:
+            os.remove(self.screenshotName('WorkflowDetails'))
+            os.remove(self.screenshotName('WorkflowInputs'))
+
+        # Choose Input file
+        with run.waitForInteraction(300):
+            continueButton = self.portal.wait(60).until(
+                expected_conditions.element_to_be_clickable((By.XPATH, '//button/div[text()="Submit"]')))
+            title = self.portal.find_element_by_xpath('/html/body/table/tbody/tr[1]/td/div').text
+            self.assertEqual(title, 'Choose Input file')
+            fileInput = self.portal.find_element_by_xpath('/html/body/table/tbody/tr[2]/td/form/input')
+            self.pause(1)
+            fileInput.send_keys(self.inputFile)
+            self.pause(1)
+            self.portal.click(continueButton)
+
+        # Choose Sub-workflow
+        with run.waitForInteraction(300, 1):
+            continueButton = self.portal.wait(60).until(
+                expected_conditions.element_to_be_clickable((By.XPATH, '//button/div[text()="OK"]')))
+            title = self.portal.find_element_by_xpath('/html/body/table/tbody/tr[1]/td/div').text
+            self.assertEqual(title, 'Choose Sub-Workflow')
+            input = self.portal.find_element_by_xpath('//label[text()="Data Quality (Google Refine)"]/../input')
+            self.pause(1)
+            input.click()
+            self.screenshot('screen-drw-15b')
+            self.pause(1)
+            self.portal.click(continueButton)
+
+        # Refine
+        with run.waitForInteraction(300, 1) as interaction:
+            viewPanel = self.portal.wait(60).until(
+                expected_conditions.presence_of_element_located(
+                    (By.ID, "view-panel")
+                    )
+                )
+            header = self.portal.wait(60).until(
+                expected_conditions.presence_of_element_located(
+                    (By.XPATH, '//*[@id="view-panel"]/div[@class="data-header-table-container"]//span[@class="column-header-name" and text()="nameComplete"]')
+                    )
+                )
+            self.screenshot('screen-drw-16a', interaction.location, interaction.size)
+            # Scroll the table to the right, until we see the nameComplete column.
+            # First, identify the top-level element of the column (a parent
+            # element with a large horizontal offset).  The find the container
+            # element that contains the scrollbar, and tell it to scroll till
+            # the header is visible.  However, the header elements aren't
+            # actually contained in a scrollable region. The scrollbars are in
+            # the content container, so we take the header offset and set the
+            # content offset from it.
+            offsetElement = header
+            while int(offsetElement.get_attribute('offsetLeft')) < 100:
+                offsetElement = offsetElement.find_element_by_xpath('..')
+            scrollableElement = self.portal.find_element_by_xpath('//*[@id="view-panel"]/div[@class="data-table-container"]')
+            self.portal.browser.execute_script("arguments[0].scrollLeft = arguments[1].offsetLeft - 25;", scrollableElement, offsetElement)
+            time.sleep(1)
+            header = viewPanel.find_element_by_xpath('./div[@class="data-header-table-container"]//span[@class="column-header-name" and text()="nameComplete"]')
+            dropdown = header.find_element_by_xpath('../a[@class="column-header-menu"]')
+            self.pause(1)
+            dropdown.click()
+            facet = self.portal.find_element_by_xpath('/html/body/div[@class="menu-container"]//td[text()="Facet"]')
+            self.pause(1)
+            ActionChains(self.portal.browser).move_to_element(facet).perform()
+            textFacet = self.portal.wait(5).until(
+                expected_conditions.presence_of_element_located(
+                    (By.XPATH, '/html/body/div[@class="menu-container"]/a[text()="Text facet"]')
+                    )
+                )
+            ActionChains(self.portal.browser).move_to_element(textFacet).perform()
+            time.sleep(1)
+            self.screenshot('screen-drw-16b')
+            textFacet.click()
+            speciesName = self.portal.wait(60).until(
+                expected_conditions.element_to_be_clickable(
+                    (By.XPATH, '//div[@id="refine-tabs-facets"]//div[class="facet-choice"]/a[text()="Acanthocardia echinata"]')
+                    )
+                )
+            self.screenshot('screen-drw-17a')
+            self.pause(1)
+            speciesName.click()
+            time.sleep(2)
+            self.screenshot('screen-drw-17b')
+            header = viewPanel.find_element_by_xpath('./div[@class="data-header-table-container"]//span[@class="column-header-name" and text()="All"]')
+            dropdown = header.find_element_by_xpath('../a[@class="column-header-menu"]')
+            dropdown.click()
+            editRows = self.portal.find_element_by_xpath('/html/body/div[@class="menu-container"]//td[text()="Edit rows"]')
+            ActionChains(self.portal.browser).move_to_element(editRows).perform()
+            matchingRows = self.portal.find_element_by_xpath('/html/body/div[@class="menu-container"]/a[text()="Remove all matching rows"]')
+            ActionChains(self.portal.browser).move_to_element(matchingRows).perform()
+            self.screenshot('screen-drw-18a')
+            exportButton = self.portal.find_element_by_id("export-button")
+            self.pause(1)
+            exportButton.click()
+            csvExport = self.portal.find_element_by_xpath('/html/body/div[@class="menu-container"]/a[text()="Comma-separated value"]')
+            ActionChains(self.portal.browser).move_to_element(csvExport).perform()
+            self.pause(1)
+            self.screenshot('screen-drw-18b')
+
+            # XXX need a more complex example to generate p19 screenshots
+
+            biovelButton = self.portal.find_element_by_xpath('//span[@id="extension-bar-menu-container"]/a/span[text()="BioVeL"]')
+            biovelButton.click()
+            saveMenu = self.portal.find_element_by_xpath('/html/body/div[@class="menu-container"]/a[text()="Save to Taverna"]')
+            ActionChains(self.portal.browser).move_to_element(saveMenu).perform()
+            self.screenshot('screen-drw-20a')
+            saveMenu.click()
 
         # Choose Sub-workflow
         with run.waitForInteraction(300) as interaction:
@@ -242,7 +364,7 @@ class RunDRWWorkflow(WorkflowTest):
             self.pause(1)
             self.portal.click(continueButton)
 
-        results = run.waitForFinish(300)
+        results = run.waitForFinish(120)
 
         csv_output = results['csv_output'].getValue()
         count = csv_output.count('\n')
@@ -250,12 +372,13 @@ class RunDRWWorkflow(WorkflowTest):
 
         self.screenshot('screen-drw-21a')
 
+
 # Firefox on Windows hangs on click of Run Workflow button using Selenium, but
 # not when running workflow manually
 # confirmed on (FF27.0.1, Win7)
-@unittest.skipIf(platform.system() == 'Windows', 'Selenium hangs with Firefox on Windows')
-class RunDRWWorkflowFirefox(RunDRWWorkflow, unittest.TestCase, WithFirefox):
-    pass
+# @unittest.skipIf(platform.system() == 'Windows', 'Selenium hangs with Firefox on Windows')
+# class RunDRWWorkflowFirefox(RunDRWWorkflow, unittest.TestCase, WithFirefox):
+#     pass
 
 if WithChrome:
     class RunDRWWorkflowChrome(RunDRWWorkflow, unittest.TestCase, WithChrome):

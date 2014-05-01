@@ -201,8 +201,8 @@ class PortalBrowser:
                         )
                     )
                 self.iframe = modal_interaction_dialog.find_element_by_tag_name('iframe')
-                self.location = self.iframe.location
-                self.size = self.iframe.size
+                # The parent dialog has a specified size, so should not return 0
+                self.dialog = modal_interaction_dialog.find_element_by_xpath('..')
                 self.portal.switch_to_frame(self.iframe)
                 return self
 
@@ -231,6 +231,20 @@ class PortalBrowser:
                                 )
                             )
                         self.portal.execute_script('document.getElementById("body").removeChild(document.getElementById("modal-interaction-dialog"))')
+
+            @property
+            def location(self):
+                self.portal.switch_to_default_content()
+                location = self.dialog.location
+                self.switchBack()
+                return location
+
+            @property
+            def size(self):
+                self.portal.switch_to_default_content()
+                size = self.dialog.size
+                self.switchBack()
+                return size
 
             def switchBack(self):
                 # After a context switch (e.g. an alert), return to the interaction page
