@@ -114,10 +114,6 @@ class PortalBrowser:
             return False
         return True
 
-    def signInAsGuest(self):
-        link = self.browser.find_element_by_link_text("Click here to log into the guest account")
-        link.click()
-
     def signInWithPassword(self, username, password):
         header = self.getPageHeader()
         link = header.find_element_by_partial_link_text("Log in")

@@ -172,19 +172,16 @@ class WorkflowTest(BaseTest):
         BaseTest.setUp(self)
         if username:
             self.portal.signInWithPassword(username, password)
-        else:
-            self.portal.signInAsGuest()
         self.addCleanup(self.portalSignOut)
 
     def restartBrowser(self):
         super().restartBrowser()
         if username:
             self.portal.signInWithPassword(username, password)
-        else:
-            self.portal.signInAsGuest()
 
     def portalSignOut(self):
-        self.portal.signOut()
+        if username:
+            self.portal.signOut()
 
     def reportFailedRun(self):
         advanced = self.portal.find_element_by_id('advanced')
