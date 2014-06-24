@@ -8,7 +8,7 @@ class RunRConnectionTest(WorkflowTest):
     def test_workflow(self):
         run = self.runUploadedWorkflow('t2flow/Rconnect.t2flow', 'Other')
 
-        results = run.waitForFinish(60)
+        results = run.waitForFinish(120)
 
         out = results['out']
         value = out.getValue()
