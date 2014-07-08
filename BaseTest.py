@@ -266,7 +266,8 @@ class WorkflowTest(BaseTest):
                 link = self.portal.find_element_by_partial_link_text("Delete")
                 link.click()
                 self.portal.acceptAlert()
-                self.assertIn('Run was deleted', self.portal.getFlashNotice())
+                success, notice = result = self.portal.getFlashResult()
+                self.assertIn('Run was deleted', notice, result)
                 self.portal.get(runURL)
             message = self.portal.getFlashError()
             if message:
