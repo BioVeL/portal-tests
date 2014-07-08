@@ -36,7 +36,7 @@ class RunDRWWorkflow(WorkflowTest):
 
         self.screenshot('screen-drw-10a')
 
-        run = self.runExistingWorkflow('Data Refinement Workflow v14')
+        run = self.runExistingWorkflow('Data Refinement Workflow v15')
         if self.screenshotBase:
             os.rename(self.screenshotName('WorkflowDetails'), self.screenshotName('screen-drw-10b'))
             os.rename(self.screenshotName('WorkflowInputs'), self.screenshotName('screen-drw-11a'))
@@ -243,7 +243,7 @@ class RunDRWWorkflow(WorkflowTest):
         self.pause(1)
         self.portal.click(link)
 
-        run = self.runExistingWorkflow('Data Refinement Workflow v14')
+        run = self.runExistingWorkflow('Data Refinement Workflow v15')
         if self.screenshotBase:
             os.remove(self.screenshotName('WorkflowDetails'))
             os.remove(self.screenshotName('WorkflowInputs'))
@@ -286,6 +286,7 @@ class RunDRWWorkflow(WorkflowTest):
                     )
                 )
             self.screenshot('screen-drw-16a', interaction.location, interaction.size)
+
             # Scroll the table to the right, until we see the nameComplete column.
             # First, identify the top-level element of the column (a parent
             # element with a large horizontal offset).  The find the container
@@ -300,6 +301,8 @@ class RunDRWWorkflow(WorkflowTest):
             scrollableElement = self.portal.find_element_by_xpath('//*[@id="view-panel"]/div[@class="data-table-container"]')
             self.portal.browser.execute_script("arguments[0].scrollLeft = arguments[1].offsetLeft - 25;", scrollableElement, offsetElement)
             time.sleep(1)
+
+            # Click on the nameComplete dropdown, and click Facet -> Text Facet
             header = viewPanel.find_element_by_xpath('./div[@class="data-header-table-container"]//span[@class="column-header-name" and text()="nameComplete"]')
             dropdown = header.find_element_by_xpath('../a[@class="column-header-menu"]')
             self.pause(1)
@@ -316,9 +319,11 @@ class RunDRWWorkflow(WorkflowTest):
             time.sleep(1)
             self.screenshot('screen-drw-16b')
             textFacet.click()
+
+            # Click on a species name that appears in the lefthand column
             speciesName = self.portal.wait(60).until(
                 expected_conditions.element_to_be_clickable(
-                    (By.XPATH, '//div[@id="refine-tabs-facets"]//div[class="facet-choice"]/a[text()="Acanthocardia echinata"]')
+                    (By.XPATH, '//div[@id="refine-tabs-facets"]//div[@class="facet-choice"]/a[text()="Acanthocardia echinata"]')
                     )
                 )
             self.screenshot('screen-drw-17a')
@@ -326,6 +331,11 @@ class RunDRWWorkflow(WorkflowTest):
             speciesName.click()
             time.sleep(2)
             self.screenshot('screen-drw-17b')
+
+            # Scroll back to left, click on All dropdown, and click Edit rows
+            # -> Remove all matching rows
+            scrollableElement = self.portal.find_element_by_xpath('//*[@id="view-panel"]/div[@class="data-table-container"]')
+            self.portal.browser.execute_script("arguments[0].scrollLeft = 0;", scrollableElement)
             header = viewPanel.find_element_by_xpath('./div[@class="data-header-table-container"]//span[@class="column-header-name" and text()="All"]')
             dropdown = header.find_element_by_xpath('../a[@class="column-header-menu"]')
             dropdown.click()
@@ -334,19 +344,24 @@ class RunDRWWorkflow(WorkflowTest):
             matchingRows = self.portal.find_element_by_xpath('/html/body/div[@class="menu-container"]/a[text()="Remove all matching rows"]')
             ActionChains(self.portal.browser).move_to_element(matchingRows).perform()
             self.screenshot('screen-drw-18a')
-            exportButton = self.portal.find_element_by_id("export-button")
-            self.pause(1)
-            exportButton.click()
-            csvExport = self.portal.find_element_by_xpath('/html/body/div[@class="menu-container"]/a[text()="Comma-separated value"]')
-            ActionChains(self.portal.browser).move_to_element(csvExport).perform()
-            self.pause(1)
-            self.screenshot('screen-drw-18b')
+            matchingRows.click()
+
+            # The following step requests the user to download the file from
+            # the browser, which we can't automate.
+            #
+            # exportButton = self.portal.find_element_by_id("export-button")
+            # self.pause(1)
+            # exportButton.click()
+            # csvExport = self.portal.find_element_by_xpath('/html/body/div[@class="menu-container"]/a[text()="Comma-separated value"]')
+            # ActionChains(self.portal.browser).move_to_element(csvExport).perform()
+            # self.pause(1)
+            # self.screenshot('screen-drw-18b')
 
             # XXX need a more complex example to generate p19 screenshots
 
             biovelButton = self.portal.find_element_by_xpath('//span[@id="extension-bar-menu-container"]/a/span[text()="BioVeL"]')
             biovelButton.click()
-            saveMenu = self.portal.find_element_by_xpath('/html/body/div[@class="menu-container"]/a[text()="Save to Taverna"]')
+            saveMenu = self.portal.find_element_by_xpath('/html/body/div[@class="menu-container"]/a[text()="Save updates and return to workflow"]')
             ActionChains(self.portal.browser).move_to_element(saveMenu).perform()
             self.screenshot('screen-drw-20a')
             saveMenu.click()
