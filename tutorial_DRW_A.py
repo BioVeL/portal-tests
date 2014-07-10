@@ -26,7 +26,6 @@ class RunDRWWorkflow(WorkflowTest):
         urllib.request.urlretrieve(fullUrl, self.inputFile)
         self.portal.get(saveURL)
 
-    @unittest.skip('BioSTIF')
     def test_drw_3_1_5(self):
         self.screenshot('screen-drw-09a')
 
@@ -137,7 +136,7 @@ class RunDRWWorkflow(WorkflowTest):
                     # after the above one - and we cannot continue
                     alert = self.portal.switch_to_alert()
                     self.assertEqual(alert.text, 'BioSTiF could not start:  an error occurred: Error initializing BioSTIF: OpenLayers is not defined')
-                    self.fail('Error initializing BioSTIF: OpenLayers is not defined')
+                    self.fail("Dreaded third alert, which I can't handle - try running the test again")
                 interaction.switchBack()
             except TimeoutException:
                 # Normal execution with no alerts (or only the first) should
@@ -305,7 +304,7 @@ class RunDRWWorkflow(WorkflowTest):
             # Click on the nameComplete dropdown, and click Facet -> Text Facet
             header = viewPanel.find_element_by_xpath('./div[@class="data-header-table-container"]//span[@class="column-header-name" and text()="nameComplete"]')
             dropdown = header.find_element_by_xpath('../a[@class="column-header-menu"]')
-            self.pause(1)
+            time.sleep(1)
             dropdown.click()
             facet = self.portal.find_element_by_xpath('/html/body/div[@class="menu-container"]//td[text()="Facet"]')
             self.pause(1)
@@ -391,9 +390,9 @@ class RunDRWWorkflow(WorkflowTest):
 # Firefox on Windows hangs on click of Run Workflow button using Selenium, but
 # not when running workflow manually
 # confirmed on (FF27.0.1, Win7)
-# @unittest.skipIf(platform.system() == 'Windows', 'Selenium hangs with Firefox on Windows')
-# class RunDRWWorkflowFirefox(RunDRWWorkflow, unittest.TestCase, WithFirefox):
-#     pass
+@unittest.skipIf(platform.system() == 'Windows', 'Selenium hangs with Firefox on Windows')
+class RunDRWWorkflowFirefox(RunDRWWorkflow, unittest.TestCase, WithFirefox):
+    pass
 
 if WithChrome:
     class RunDRWWorkflowChrome(RunDRWWorkflow, unittest.TestCase, WithChrome):
