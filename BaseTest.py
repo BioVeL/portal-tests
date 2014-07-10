@@ -311,7 +311,8 @@ class WorkflowTest(BaseTest):
         start = self.portal.find_element_by_xpath("//input[@value='Start Run']")
         start.click()
 
-        self.assertIn('Run was successfully created', self.portal.getFlashNotice())
+        success, message = result = self.portal.getFlashResult()
+        self.assertIn('Run was successfully created', message, result)
 
         runURL = self.portal.current_url
         self.addCleanup(self.removeRunAtURL, runURL)
